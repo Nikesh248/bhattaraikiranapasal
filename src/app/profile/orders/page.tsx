@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react'; // Import React
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,10 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { History } from 'lucide-react';
 import { Badge } from '@/components/ui/badge'; // Import Badge
 
-// TODO: Define an Order type and fetch real order data
+// Define an Order type and fetch real order data
 interface Order {
   id: string;
-  date: string;
+  dateTime: string; // Store date and time as a string (ISO format preferably)
   total: number;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
   items: { name: string; quantity: number }[];
@@ -21,7 +21,7 @@ interface Order {
 export default function OrderHistoryPage() {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true); // Use useState directly
+  const [isLoading, setIsLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]); // State to hold orders
 
   useEffect(() => {
@@ -36,10 +36,10 @@ export default function OrderHistoryPage() {
       setIsLoading(true);
       // Replace with actual API call to fetch user's orders
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-      // Mock data for now
+      // Mock data for now - use ISO format for dateTime
       setOrders([
-        { id: 'order_123', date: '2024-07-28', total: 55.50, status: 'Delivered', items: [{name: 'Organic Apples', quantity: 2}, {name: 'Wireless Headphones', quantity: 1}] },
-        { id: 'order_456', date: '2024-07-25', total: 25.00, status: 'Shipped', items: [{name: 'Cotton T-Shirt', quantity: 1}] },
+        { id: 'order_123', dateTime: '2024-07-27T10:30:00Z', total: 55.50, status: 'Delivered', items: [{name: 'Organic Apples', quantity: 2}, {name: 'Wireless Headphones', quantity: 1}] },
+        { id: 'order_456', dateTime: '2024-07-25T15:45:00Z', total: 25.00, status: 'Shipped', items: [{name: 'Cotton T-Shirt', quantity: 1}] },
       ]);
       setIsLoading(false);
     };
@@ -47,6 +47,17 @@ export default function OrderHistoryPage() {
     fetchOrders();
 
   }, [isAuthenticated, router]);
+
+   const formatDateTime = (dateTimeString: string) => {
+      try {
+        const date = new Date(dateTimeString);
+        return `${date.toLocaleDateString()} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+      } catch (e) {
+         console.error("Error formatting date:", e);
+         return "Invalid Date"; // Fallback for invalid date strings
+      }
+   };
+
 
   if (isLoading) {
     return (
@@ -88,7 +99,8 @@ export default function OrderHistoryPage() {
                    {order.status}
                  </Badge>
                </CardTitle>
-               <CardDescription>Placed on: {new Date(order.date).toLocaleDateString()}</CardDescription>
+               {/* Display formatted date and time */}
+               <CardDescription>Placed on: {formatDateTime(order.dateTime)}</CardDescription>
                 {/* Add delivery time message */}
                <p className="text-sm text-muted-foreground mt-1">
                  Your item will deliver within 24 hours.
