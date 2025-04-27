@@ -22,8 +22,10 @@ export default function CheckoutPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash'); // State for payment method
+    const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
+        setIsClient(true);
         // If user is not authenticated or cart is empty, redirect them
         if (!isAuthenticated) {
              toast({
@@ -32,7 +34,7 @@ export default function CheckoutPage() {
                 variant: "destructive",
              });
             router.push('/login');
-        } else if (items.length === 0 && !router.pathname?.startsWith('/checkout')) { // Avoid redirect loop if already on checkout
+        } else if (items.length === 0 && router.asPath !== '/checkout') { // Avoid redirect loop if already on checkout
              toast({
                title: "Cart Empty",
                description: "Cannot proceed to checkout with an empty cart.",
@@ -64,7 +66,7 @@ export default function CheckoutPage() {
     };
 
     // Show loading state while checking auth or cart is empty (but allow viewing page if directly navigated)
-     if (!isAuthenticated) { // Only show full skeleton if not authenticated
+     if (!isClient) { // Only show full skeleton if not authenticated or client not hydrated
         return (
           <div className="container mx-auto py-8">
             <Skeleton className="h-12 w-1/4 mb-6" />
@@ -163,7 +165,7 @@ export default function CheckoutPage() {
                                     <RadioGroupItem value="khalti" id="khalti" />
                                     {/* Placeholder SVG for Khalti */}
                                     <Label htmlFor="khalti" className="flex items-center gap-2 cursor-pointer flex-grow">
-                                         <svg width="20" height="20" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M78.678 83.61 55.433 109.51c-1.284 1.403-3.226 2.302-5.333 2.418-2.106.116-4.146-.63-5.682-2.07L29.376 96.99a6.88 6.88 0 0 1-.217-9.683L64.895 50.49c1.284-1.403 3.226-2.302 5.333-2.418 2.106-.116 4.146.63 5.682 2.07l15.042 12.868a6.88 6.88 0 0 1 .217 9.683Z" fill="#5D2E8E"></path><path d="m104.57 50.49-35.736 36.817a6.88 6.88 0 0 0-.217 9.683l15.042 12.868c1.536 1.44 3.576 2.185 5.682 2.07 2.107-.116 4.049-1.015 5.333-2.418l23.245-25.9c1.284-1.403 1.945-3.215 1.788-5.045-.158-1.83-.994-3.538-2.31-4.824L104.57 50.49Z" fill="#FFF" fill-opacity=".9"></path></svg>
+                                         <svg width="20" height="20" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M78.678 83.61 55.433 109.51c-1.284 1.403-3.226 2.302-5.333 2.418-2.106.116-4.146-.63-5.682-2.07L29.376 96.99a6.88 6.88 0 0 1-.217-9.683L64.895 50.49c1.284-1.403 3.226-2.302 5.333-2.418 2.106-.116 4.146.63 5.682 2.07l15.042 12.868a6.88 6.88 0 0 1 .217 9.683Z" fill="#5D2E8E"></path><path d="m104.57 50.49-35.736 36.817a6.88 6.88 0 0 0-.217 9.683l15.042 12.868c1.536 1.44 3.576 2.185 5.682 2.07 2.107-.116 4.049-1.015 5.333-2.418l23.245-25.9c1.284-1.403 1.945-3.215 1.788-5.045-.158-1.83-.994-3.538-2.31-4.824L104.57 50.49Z" fill="#FFF" fillOpacity=".9"></path></svg>
                                          Khalti
                                     </Label>
                                 </div>
