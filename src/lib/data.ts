@@ -12,7 +12,7 @@ export const mockProducts: Product[] = [
     description: 'Fresh and juicy organic apples, perfect for snacking.',
     price: 2.50,
     // Using a different placeholder image seed for variety
-    imageUrl: 'https://picsum.photos/seed/fresh_apples/400/300',
+    imageUrl: 'https://picsum.photos/seed/updated_apples/400/300', // Changed seed
     category: 'Groceries',
     stock: 100,
   },
@@ -58,7 +58,7 @@ export const mockProducts: Product[] = [
     name: 'Running Shoes',
     description: 'Lightweight and supportive running shoes for men and women.',
     price: 79.99,
-    imageUrl: 'https://picsum.photos/seed/pasal_shoes/400/300',
+    imageUrl: 'https://picsum.photos/seed/pasal_shoes/400/300', // Changed seed back to original request
     category: 'Fashion',
     stock: 75,
   },
