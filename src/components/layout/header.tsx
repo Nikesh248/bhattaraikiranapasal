@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from "@/components/ui/skeleton";
 
 
 export default function Header() {
@@ -79,8 +80,8 @@ export default function Header() {
     { href: '/category/Home', label: 'Home' },
   ];
 
-  // Determine cart label based on client state
-  const cartLabel = isClient ? `Shopping Cart with ${totalItems} items` : 'Shopping Cart';
+  // Static aria-label for initial render consistency
+  const cartLabel = 'Shopping Cart';
 
   return (
     <header className="bg-secondary sticky top-0 z-50 shadow-md">
@@ -127,15 +128,17 @@ export default function Header() {
                   {totalItems}
                 </Badge>
               )}
-              <span className="sr-only">Shopping Cart</span>
+              <span className="sr-only">{isClient ? `Shopping Cart with ${totalItems} items` : cartLabel}</span>
             </Button>
           </Link>
 
           {/* Auth Dropdown / Login Button (Desktop) */}
            {/* Only render auth status on the client */}
-           <div className="hidden md:flex">
-             {isClient ? (
-               isAuthenticated && user ? (
+           <div className="hidden md:flex h-8 w-20 items-center justify-center"> {/* Added fixed height/width wrapper */}
+             {!isClient ? (
+                // Consistent placeholder structure during hydration
+                <Skeleton className="h-8 w-full rounded-md" />
+             ) : isAuthenticated && user ? (
                  <DropdownMenu>
                    <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -173,13 +176,7 @@ export default function Header() {
                      <LogIn className="mr-2 h-4 w-4" /> Login
                    </Button>
                  </Link>
-               )
-             ) : (
-                // Placeholder or skeleton while client state is loading
-                <Button variant="ghost" className="text-foreground hover:text-primary" disabled>
-                  <LogIn className="mr-2 h-4 w-4" /> Login
-                </Button>
-             )}
+               )}
            </div>
 
 
@@ -225,8 +222,13 @@ export default function Header() {
 
                  {/* Mobile Auth Section - Only render on client */}
                   <div className="mt-auto pt-4 border-t border-border">
-                   {isClient ? (
-                     isAuthenticated && user ? (
+                   {!isClient ? (
+                      // Placeholder for mobile auth section
+                      <div className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-muted-foreground">
+                         <Skeleton className="h-6 w-6 rounded-full" />
+                         <Skeleton className="h-5 w-20 rounded" />
+                      </div>
+                   ) : isAuthenticated && user ? (
                         <div className="space-y-2">
                            <Link
                              href="/profile"
@@ -251,13 +253,7 @@ export default function Header() {
                          >
                          <LogIn className="mr-2 h-5 w-5" /> Login
                         </Link>
-                     )
-                   ) : (
-                      // Placeholder for mobile auth section
-                      <div className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-muted-foreground">
-                         <LogIn className="mr-2 h-5 w-5" /> Loading...
-                      </div>
-                   )}
+                     )}
                  </div>
 
               </SheetContent>
@@ -268,3 +264,4 @@ export default function Header() {
     </header>
   );
 }
+
