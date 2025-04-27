@@ -24,6 +24,9 @@ export default function CheckoutPage() {
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash'); // State for payment method
     const [isClient, setIsClient] = useState(false);
 
+    // Define shipping cost
+    const shippingCost = 150.00;
+
     useEffect(() => {
         setIsClient(true);
         // If user is not authenticated or cart is empty, redirect them
@@ -68,11 +71,10 @@ export default function CheckoutPage() {
     const handleChangeAddress = () => {
         // Redirect to signup page as requested
         router.push('/signup');
-        // Optionally, show a toast message
-        // toast({
-        //   title: "Redirecting",
-        //   description: "Please sign up or log in to manage addresses.",
-        // });
+        toast({
+          title: "Manage Address",
+          description: "Please update your address information on the signup/profile page.",
+        });
     };
 
     // Show loading state while checking auth or cart is empty (but allow viewing page if directly navigated)
@@ -111,8 +113,9 @@ export default function CheckoutPage() {
       }
 
 
-    const totalPrice = getTotalPrice();
+    const subtotal = getTotalPrice();
     const totalItems = getTotalItems();
+    const finalTotal = subtotal + shippingCost; // Calculate final total
 
     return (
         <div className="container mx-auto py-8">
@@ -208,16 +211,18 @@ export default function CheckoutPage() {
                             <Separator />
                              <div className="flex justify-between">
                               <span>Subtotal ({totalItems} items)</span>
-                              <span>Rs. {totalPrice.toFixed(2)}</span>
+                              <span>Rs. {subtotal.toFixed(2)}</span>
                             </div>
                             <div className="flex justify-between">
                               <span>Shipping</span>
-                              <span className="text-primary">Free</span>
+                              {/* Display shipping cost */}
+                              <span>Rs. {shippingCost.toFixed(2)}</span>
                             </div>
                             <Separator />
                             <div className="flex justify-between font-bold text-lg">
                                 <span>Total</span>
-                                <span>Rs. {totalPrice.toFixed(2)}</span>
+                                {/* Display final total */}
+                                <span>Rs. {finalTotal.toFixed(2)}</span>
                             </div>
                         </CardContent>
                         <CardFooter>
