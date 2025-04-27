@@ -84,6 +84,9 @@ export default function Header() {
 
   // Static aria-label for initial render consistency
   const cartLabel = 'Shopping Cart';
+  // Dynamic aria-label for client-side after hydration
+  const dynamicCartLabel = isClient && totalItems > 0 ? `Shopping Cart, ${totalItems} items` : cartLabel;
+
 
   return (
     <header className="bg-secondary sticky top-0 z-50 shadow-md">
@@ -121,18 +124,16 @@ export default function Header() {
           </form>
 
           {/* Cart */}
-          <Link href="/cart" aria-label={cartLabel}>
+          <Link href="/cart" aria-label={dynamicCartLabel}>
             <Button variant="ghost" size="icon" className="relative text-foreground hover:text-primary">
               <ShoppingCart className="h-5 w-5" />
-              {/* Only render the badge and dynamic SR text on the client */}
+              {/* Only render the badge on the client when items exist */}
               {isClient && totalItems > 0 && (
                 <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0 text-xs">
                   {totalItems}
                 </Badge>
               )}
-              <span className="sr-only">
-                {isClient ? `Shopping Cart, ${totalItems} items` : cartLabel}
-              </span>
+              {/* Screen reader text is handled by aria-label on Link */}
             </Button>
           </Link>
 
@@ -178,10 +179,8 @@ export default function Header() {
                 ) : (
                   // Render Login button when client hydrated and user logged out
                  <Link href="/login" passHref legacyBehavior>
-                   <Button asChild variant="ghost" className="text-foreground hover:text-primary">
-                     <a> {/* Use anchor tag inside Button with asChild */}
-                       <LogIn className="mr-2 h-4 w-4" /> Login
-                     </a>
+                   <Button as="a" variant="ghost" className="text-foreground hover:text-primary">
+                      <LogIn className="mr-2 h-4 w-4" /> Login
                    </Button>
                  </Link>
                )}
