@@ -4,6 +4,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'; // Import useRouter
+import { useState, useEffect } from 'react'; // Import useState and useEffect
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +20,13 @@ export default function CartPage() {
   const { items, removeFromCart, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCartStore();
   const { isAuthenticated } = useAuthStore(); // Get authentication status
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false); // Add isClient state
+
+  useEffect(() => {
+    // This effect runs only on the client after initial render
+    setIsClient(true);
+  }, []);
+
 
   const handleRemove = (item: CartItem) => {
      removeFromCart(item.id);
@@ -60,8 +68,15 @@ export default function CartPage() {
        });
       router.push('/login'); // Redirect to login page if not authenticated
     } else {
-      // User is authenticated, proceed to checkout (assuming /checkout is the route)
-      // In a real app, you might navigate to a specific checkout page or trigger an action
+      if (items.length === 0) {
+         toast({
+           title: "Cart Empty",
+           description: "Your cart is empty. Add items before checking out.",
+           variant: "destructive",
+         });
+        return;
+      }
+      // User is authenticated and cart is not empty, proceed to checkout
       router.push('/checkout'); // TODO: Create checkout page/flow
        toast({
          title: "Proceeding to Checkout",
@@ -70,18 +85,38 @@ export default function CartPage() {
     }
   };
 
-  const totalPrice = getTotalPrice();
-  const totalItems = getTotalItems();
+  // Calculate totals after client-side mount
+  const totalPrice = isClient ? getTotalPrice() : 0;
+  const totalItems = isClient ? getTotalItems() : 0;
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-2">
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Your Shopping Cart ({totalItems} items)</CardTitle>
+            {/* Conditionally render totalItems */}
+            <CardTitle className="text-2xl font-bold">
+              Your Shopping Cart {isClient ? `(${totalItems} items)` : ''}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {items.length === 0 ? (
+            {/* Show skeleton or message while loading */}
+            {!isClient ? (
+               <div className="space-y-4">
+                 <div className="flex gap-4 border-b pb-4">
+                   <div className="h-20 w-20 rounded-md bg-muted animate-pulse"></div>
+                   <div className="flex-grow space-y-2">
+                      <div className="h-4 w-3/4 bg-muted animate-pulse rounded"></div>
+                      <div className="h-4 w-1/2 bg-muted animate-pulse rounded"></div>
+                      <div className="h-4 w-1/4 bg-muted animate-pulse rounded"></div>
+                   </div>
+                   <div className="flex items-center gap-2 ml-auto">
+                      <div className="h-8 w-24 bg-muted animate-pulse rounded-md"></div>
+                       <div className="h-8 w-8 bg-muted animate-pulse rounded-md"></div>
+                   </div>
+                 </div>
+               </div>
+             ) : items.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Your cart is empty.</p>
             ) : (
               items.map((item) => (
@@ -151,7 +186,7 @@ export default function CartPage() {
                 </div>
               ))
             )}
-             {items.length > 0 && (
+             {isClient && items.length > 0 && ( // Only show clear cart button on client when items exist
                <div className="flex justify-end mt-4">
                  <Button variant="outline" onClick={handleClearCart} className="text-destructive border-destructive hover:bg-destructive/10">
                     Clear Cart
@@ -168,29 +203,50 @@ export default function CartPage() {
             <CardTitle className="text-xl font-bold">Order Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between">
-              <span>Subtotal ({totalItems} items)</span>
-              <span>Rs. {totalPrice.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span className="text-primary">Free</span> {/* Or calculate shipping */}
-            </div>
-             <div className="flex justify-between">
-              <span>Discount Code</span>
-               <Button variant="link" className="p-0 h-auto text-primary">Apply</Button> {/* TODO: Implement discount codes */}
-            </div>
-            <Separator />
-            <div className="flex justify-between font-bold text-lg">
-              <span>Total</span>
-              <span>Rs. {totalPrice.toFixed(2)}</span>
-            </div>
+             {/* Show skeleton while loading */}
+             {!isClient ? (
+               <div className="space-y-3">
+                  <div className="flex justify-between">
+                      <div className="h-4 w-2/5 bg-muted animate-pulse rounded"></div>
+                      <div className="h-4 w-1/5 bg-muted animate-pulse rounded"></div>
+                  </div>
+                   <div className="flex justify-between">
+                      <div className="h-4 w-1/4 bg-muted animate-pulse rounded"></div>
+                       <div className="h-4 w-1/6 bg-muted animate-pulse rounded"></div>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between font-bold text-lg">
+                       <div className="h-6 w-1/5 bg-muted animate-pulse rounded"></div>
+                       <div className="h-6 w-1/4 bg-muted animate-pulse rounded"></div>
+                  </div>
+               </div>
+             ) : (
+                <>
+                  <div className="flex justify-between">
+                    <span>Subtotal ({totalItems} items)</span>
+                    <span>Rs. {totalPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Shipping</span>
+                    <span className="text-primary">Free</span> {/* Or calculate shipping */}
+                  </div>
+                   <div className="flex justify-between">
+                    <span>Discount Code</span>
+                     <Button variant="link" className="p-0 h-auto text-primary">Apply</Button> {/* TODO: Implement discount codes */}
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total</span>
+                    <span>Rs. {totalPrice.toFixed(2)}</span>
+                  </div>
+               </>
+            )}
           </CardContent>
           <CardFooter>
             <Button
               size="lg"
               className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
-              disabled={items.length === 0}
+              disabled={!isClient || items.length === 0} // Disable button until client hydrated and cart has items
               onClick={handleProceedToCheckout} // Add onClick handler
             >
               Proceed to Checkout
@@ -201,5 +257,6 @@ export default function CartPage() {
     </div>
   );
 }
+
 
     
