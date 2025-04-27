@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, User, Menu, LogIn, LogOut } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, LogIn, LogOut, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -71,9 +71,9 @@ export default function Header() {
       .toUpperCase();
    };
 
-  const navItems = [
+  const baseNavItems = [
     { href: '/', label: 'Home' },
-    // Removed category links as requested
+    // Add Order History conditionally later
   ];
 
   // Static aria-label for initial render consistency
@@ -95,11 +95,17 @@ export default function Header() {
            {/* Left Side: Desktop Nav */}
            <div className="flex items-center gap-4">
              <nav className="hidden md:flex items-center gap-4">
-               {navItems.map((item) => (
+               {baseNavItems.map((item) => (
                  <Link key={item.href} href={item.href} className="text-sm font-medium text-foreground hover:text-primary transition-colors">
                    {item.label}
                  </Link>
                ))}
+                {/* Conditionally render Order History for authenticated users */}
+                {isClient && isAuthenticated && (
+                   <Link href="/profile/orders" className="text-sm font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1">
+                     <History className="h-4 w-4" /> Order History
+                   </Link>
+                )}
              </nav>
            </div>
 
@@ -139,53 +145,57 @@ export default function Header() {
              </Link>
 
              {/* Auth Dropdown / Login Button (Desktop) */}
-             <div className="hidden md:flex h-10 w-24 items-center justify-center">
-               {isClient ? ( // Check if client is hydrated
-                   isAuthenticated && user ? (
-                     // Render DropdownMenu when client hydrated and user logged in
-                     <DropdownMenu>
-                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                           <Avatar className="h-8 w-8">
-                             <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
-                             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                           </Avatar>
-                         </Button>
-                       </DropdownMenuTrigger>
-                       <DropdownMenuContent className="w-56" align="end" forceMount>
-                         <DropdownMenuLabel className="font-normal">
-                           <div className="flex flex-col space-y-1">
-                             <p className="text-sm font-medium leading-none">{user.name}</p>
-                             <p className="text-xs leading-none text-muted-foreground">
-                               {user.email}
-                             </p>
-                           </div>
-                         </DropdownMenuLabel>
-                         <DropdownMenuSeparator />
-                         <DropdownMenuItem asChild>
-                           <Link href="/profile">
-                             <User className="mr-2 h-4 w-4" />
-                             <span>Profile</span>
-                           </Link>
-                         </DropdownMenuItem>
-                         <DropdownMenuItem onClick={handleLogout}>
-                           <LogOut className="mr-2 h-4 w-4" />
-                           <span>Log out</span>
-                         </DropdownMenuItem>
-                       </DropdownMenuContent>
-                     </DropdownMenu>
-                   ) : (
-                     // Render Login button when client hydrated and user logged out
-                     <Link href="/login" passHref legacyBehavior>
-                       <Button as="a" variant="ghost" className="text-foreground hover:text-primary text-sm">
-                         <LogIn className="mr-1 h-4 w-4" /> Login
-                       </Button>
-                     </Link>
-                   )
-               ) : (
-                 // Render skeleton initially on both server and client
+             <div className="hidden md:flex items-center justify-center min-w-[6rem]">
+               {/* Render skeleton initially */}
+               {!isClient ? (
                  <Skeleton className="h-8 w-20 rounded-md" />
-               )}
+               ) : isAuthenticated && user ? (
+                   <DropdownMenu>
+                     <DropdownMenuTrigger asChild>
+                       <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                         <Avatar className="h-8 w-8">
+                           <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
+                           <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                         </Avatar>
+                       </Button>
+                     </DropdownMenuTrigger>
+                     <DropdownMenuContent className="w-56" align="end" forceMount>
+                       <DropdownMenuLabel className="font-normal">
+                         <div className="flex flex-col space-y-1">
+                           <p className="text-sm font-medium leading-none">{user.name}</p>
+                           <p className="text-xs leading-none text-muted-foreground">
+                             {user.email}
+                           </p>
+                         </div>
+                       </DropdownMenuLabel>
+                       <DropdownMenuSeparator />
+                       <DropdownMenuItem asChild>
+                         <Link href="/profile">
+                           <User className="mr-2 h-4 w-4" />
+                           <span>Profile</span>
+                         </Link>
+                       </DropdownMenuItem>
+                       <DropdownMenuItem asChild>
+                         <Link href="/profile/orders">
+                           <History className="mr-2 h-4 w-4" />
+                           <span>Order History</span>
+                         </Link>
+                       </DropdownMenuItem>
+                       <DropdownMenuSeparator />
+                       <DropdownMenuItem onClick={handleLogout}>
+                         <LogOut className="mr-2 h-4 w-4" />
+                         <span>Log out</span>
+                       </DropdownMenuItem>
+                     </DropdownMenuContent>
+                   </DropdownMenu>
+                 ) : (
+                   <Link href="/login" passHref legacyBehavior>
+                     <Button as="a" variant="ghost" className="text-foreground hover:text-primary text-sm px-3">
+                       <LogIn className="mr-1 h-4 w-4" /> Login
+                     </Button>
+                   </Link>
+                 )
+               }
              </div>
 
 
@@ -217,7 +227,7 @@ export default function Header() {
 
                    {/* Mobile Navigation */}
                    <nav className="flex-grow flex flex-col gap-2">
-                     {navItems.map((item) => (
+                     {baseNavItems.map((item) => (
                        <Link
                          key={item.href}
                          href={item.href}
@@ -227,6 +237,16 @@ export default function Header() {
                          {item.label}
                        </Link>
                      ))}
+                      {/* Conditionally render Order History for authenticated users */}
+                      {isClient && isAuthenticated && (
+                         <Link
+                           href="/profile/orders"
+                           className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-foreground hover:text-primary transition-colors rounded-md hover:bg-primary/10"
+                           onClick={() => setIsMobileMenuOpen(false)}
+                         >
+                           <History className="h-5 w-5" /> Order History
+                         </Link>
+                      )}
                    </nav>
 
                    {/* Mobile Auth Section - Only render on client */}
@@ -276,4 +296,5 @@ export default function Header() {
      </header>
    );
 }
+
 

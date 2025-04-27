@@ -8,8 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LogOut } from 'lucide-react';
+import { LogOut, History, MapPin } from 'lucide-react'; // Added History and MapPin
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link'; // Import Link
 
 export default function ProfilePage() {
   const { user, isAuthenticated, logout } = useAuthStore();
@@ -47,7 +48,7 @@ export default function ProfilePage() {
            <CardContent className="space-y-4 mt-4">
              <Skeleton className="h-8 w-full" />
              <Skeleton className="h-8 w-full" />
-             <Skeleton className="h-10 w-24 ml-auto" />
+             <Skeleton className="h-10 w-full mt-6" /> {/* Skeleton for Logout button */}
            </CardContent>
          </Card>
       </div>
@@ -77,10 +78,17 @@ export default function ProfilePage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4 mt-4">
-          {/* Placeholder for additional profile sections */}
-          <Button variant="outline" className="w-full">Order History</Button>
-          <Button variant="outline" className="w-full">Saved Addresses</Button>
-          <Button variant="destructive" onClick={handleLogout} className="w-full flex items-center gap-2 mt-6">
+           {/* Link to Order History */}
+          <Button asChild variant="outline" className="w-full justify-start text-left">
+             <Link href="/profile/orders">
+               <History className="mr-2 h-4 w-4" /> Order History
+             </Link>
+           </Button>
+           {/* Placeholder for Saved Addresses */}
+           <Button variant="outline" className="w-full justify-start text-left" disabled> {/* Disable for now */}
+             <MapPin className="mr-2 h-4 w-4" /> Saved Addresses
+           </Button>
+          <Button variant="destructive" onClick={handleLogout} className="w-full flex items-center justify-center gap-2 mt-6">
             <LogOut className="h-4 w-4" /> Logout
           </Button>
         </CardContent>
