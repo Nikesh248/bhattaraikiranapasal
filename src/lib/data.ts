@@ -7,7 +7,9 @@ export const mockProducts: Product[] = [
     name: 'Organic Apples',
     description: 'Fresh and juicy organic apples, perfect for snacking.',
     price: 2.50,
-    imageUrl: 'https://picsum.photos/seed/new_apples/400/300', // Updated image URL
+    // Keep using a web-accessible URL like picsum or a hosted image.
+    // Local path "C:\Users\nik esh\OneDrive\Pictures\Screenshots\width1338.webp" is not valid here.
+    imageUrl: 'https://picsum.photos/seed/apples/400/300',
     category: 'Groceries',
     stock: 100,
   },
@@ -52,6 +54,8 @@ export const mockProducts: Product[] = [
     name: 'Running Shoes',
     description: 'Lightweight and supportive running shoes for men and women.',
     price: 79.99,
+    // Keep using a web-accessible URL like picsum or a hosted image.
+    // Local path "C:\Users\nik esh\OneDrive\Pictures\Screenshots\width1338.webp" is not valid here.
     imageUrl: 'https://picsum.photos/seed/shoes/400/300',
     category: 'Fashion',
     stock: 75,
@@ -99,11 +103,13 @@ export const getProductById = (id: string): Product | undefined => {
 };
 
 export const getProductsByCategory = (category: string): Product[] => {
-  return mockProducts.filter(p => p.category === category);
+  // Ensure case-insensitive comparison for category filtering
+  const lowerCaseCategory = category.toLowerCase();
+  return mockProducts.filter(p => p.category.toLowerCase() === lowerCaseCategory);
 };
 
 export const searchProducts = (query: string): Product[] => {
-  if (!query) return mockProducts;
+  if (!query) return mockProducts; // Return all if query is empty
   const lowerCaseQuery = query.toLowerCase();
   return mockProducts.filter(
     p =>
@@ -111,4 +117,9 @@ export const searchProducts = (query: string): Product[] => {
       p.description.toLowerCase().includes(lowerCaseQuery) ||
       p.category.toLowerCase().includes(lowerCaseQuery)
   );
+};
+
+export const getCategories = (): string[] => {
+    const categories = new Set(mockProducts.map(p => p.category));
+    return Array.from(categories);
 };
