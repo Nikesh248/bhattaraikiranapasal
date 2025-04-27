@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react'; // Import React
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,8 +20,8 @@ interface Order {
 export default function OrderHistoryPage() {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [isLoading, setIsLoading] = React.useState(true);
-  const [orders, setOrders] = React.useState<Order[]>([]); // State to hold orders
+  const [isLoading, setIsLoading] = useState(true); // Use useState directly
+  const [orders, setOrders] = useState<Order[]>([]); // State to hold orders
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -78,11 +78,11 @@ export default function OrderHistoryPage() {
                <CardTitle className="text-lg flex justify-between items-center">
                  <span>Order ID: {order.id}</span>
                  <span className={`text-sm font-medium px-2 py-1 rounded-md ${
-                   order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                   order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                   order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
-                   order.status === 'Pending' ? 'bg-gray-100 text-gray-800' :
-                   'bg-red-100 text-red-800' // Cancelled
+                   order.status === 'Delivered' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                   order.status === 'Shipped' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                   order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                   order.status === 'Pending' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' :
+                   'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' // Cancelled
                  }`}>
                    {order.status}
                  </span>
