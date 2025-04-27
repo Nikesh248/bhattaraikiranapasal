@@ -7,6 +7,7 @@ import { useAuthStore } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { History } from 'lucide-react';
+import { Badge } from '@/components/ui/badge'; // Import Badge
 
 // TODO: Define an Order type and fetch real order data
 interface Order {
@@ -73,21 +74,25 @@ export default function OrderHistoryPage() {
          </Card>
        ) : (
          orders.map((order) => (
-           <Card key={order.id}>
+           <Card key={order.id} className="shadow-md">
              <CardHeader>
                <CardTitle className="text-lg flex justify-between items-center">
                  <span>Order ID: {order.id}</span>
-                 <span className={`text-sm font-medium px-2 py-1 rounded-md ${
+                 <Badge className={`text-sm font-medium px-2 py-1 rounded-md ${
                    order.status === 'Delivered' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
                    order.status === 'Shipped' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
                    order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
                    order.status === 'Pending' ? 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200' :
                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' // Cancelled
-                 }`}>
+                 }`} variant="secondary">
                    {order.status}
-                 </span>
+                 </Badge>
                </CardTitle>
                <CardDescription>Placed on: {new Date(order.date).toLocaleDateString()}</CardDescription>
+                {/* Add delivery time message */}
+               <p className="text-sm text-muted-foreground mt-1">
+                 Your item will deliver within 24 hours.
+               </p>
              </CardHeader>
              <CardContent>
                <p className="font-medium mb-2">Items:</p>
