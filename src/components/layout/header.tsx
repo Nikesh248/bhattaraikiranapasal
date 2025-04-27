@@ -76,7 +76,7 @@ export default function Header() {
     { href: '/category/Groceries', label: 'Groceries' },
     { href: '/category/Electronics', label: 'Electronics' },
     { href: '/category/Fashion', label: 'Fashion' },
-    { href: '/category/Home', label: 'Home' },
+    // Removed the duplicate 'Home' link here
   ];
 
   // Static aria-label for initial render consistency
@@ -121,7 +121,7 @@ export default function Header() {
           </form>
 
           {/* Cart */}
-          <Link href="/cart" aria-label={dynamicCartLabel}>
+          <Link href="/cart" aria-label={cartLabel}>
             <Button variant="ghost" size="icon" className="relative text-foreground hover:text-primary">
               <ShoppingCart className="h-5 w-5" />
               {/* Only render the badge on the client when items exist */}
