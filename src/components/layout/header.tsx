@@ -73,10 +73,7 @@ export default function Header() {
 
   const navItems = [
     { href: '/', label: 'Home' },
-    { href: '/category/Groceries', label: 'Groceries' },
-    { href: '/category/Electronics', label: 'Electronics' },
-    { href: '/category/Fashion', label: 'Fashion' },
-    // Removed the duplicate 'Home' link here
+    // Removed category links as requested
   ];
 
   // Static aria-label for initial render consistency
