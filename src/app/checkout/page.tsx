@@ -12,8 +12,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CreditCard, MapPin, AlertCircle, Banknote, Landmark } from 'lucide-react'; // Added Banknote, Landmark
+import { Input } from "@/components/ui/input"; // Import Input
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"; // Import Dialog components
+import { CreditCard, MapPin, AlertCircle, Banknote, Landmark } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+
+interface AddressFormData {
+    name: string;
+    address: string;
+    city: string;
+    province: string;
+    postalCode: string;
+    phoneNumber: string;
+}
 
 
 export default function CheckoutPage() {
@@ -23,6 +43,33 @@ export default function CheckoutPage() {
     const { toast } = useToast();
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash'); // State for payment method
     const [isClient, setIsClient] = useState(false);
+    const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false); // State for address dialog
+
+    // Mock address - replace with actual user address logic later
+    const [currentAddress, setCurrentAddress] = useState({
+        name: user?.name || "Loading...",
+        address: "123 Pasal St",
+        city: "Kathmandu",
+        province: "Bagmati",
+        postalCode: "44600",
+        phoneNumber: "98XXXXXXXX", // Placeholder phone number
+    });
+
+    // Initialize form data with current address when dialog opens
+    const [addressFormData, setAddressFormData] = useState<AddressFormData>(currentAddress);
+
+    useEffect(() => {
+        // Update form data if user/currentAddress changes
+        setAddressFormData({
+            name: currentAddress.name,
+            address: currentAddress.address,
+            city: currentAddress.city,
+            province: currentAddress.province,
+            postalCode: currentAddress.postalCode,
+            phoneNumber: currentAddress.phoneNumber,
+        });
+    }, [currentAddress]);
+
 
     // Define shipping cost
     const shippingCost = 150.00;
@@ -45,11 +92,17 @@ export default function CheckoutPage() {
               });
             router.push('/cart');
         }
-    }, [isAuthenticated, items, router, toast]);
+        // Update currentAddress when user loads
+         if (user) {
+            setCurrentAddress(prev => ({ ...prev, name: user.name }));
+            setAddressFormData(prev => ({ ...prev, name: user.name }));
+         }
+
+    }, [isAuthenticated, items, router, toast, user]);
 
     const handlePlaceOrder = () => {
         // Simulate placing the order
-        console.log("Placing order for user:", user?.email, "Items:", items, "Payment Method:", selectedPaymentMethod);
+        console.log("Placing order for user:", user?.email, "Items:", items, "Payment Method:", selectedPaymentMethod, "Shipping Address:", currentAddress);
         // TODO: Implement actual order placement logic (API call, payment integration, etc.)
 
         // Clear the cart after placing the order
@@ -68,14 +121,23 @@ export default function CheckoutPage() {
         }, 1500); // Delay redirect slightly to allow toast visibility
     };
 
-    const handleChangeAddress = () => {
-        // Redirect to signup page as requested
-        router.push('/signup');
+    const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setAddressFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSaveAddress = () => {
+        // TODO: Validate addressFormData
+        // TODO: Implement actual address saving logic (update useAuthStore, call API)
+        console.log("Saving new address:", addressFormData);
+        setCurrentAddress(addressFormData); // Update the displayed address
+        setIsAddressDialogOpen(false); // Close the dialog
         toast({
-          title: "Manage Address",
-          description: "Please update your address information on the signup/profile page.",
+            title: "Address Updated",
+            description: "Your shipping address has been saved.",
         });
     };
+
 
     // Show loading state while checking auth or cart is empty (but allow viewing page if directly navigated)
      if (!isClient) { // Only show full skeleton if not authenticated or client not hydrated
@@ -138,18 +200,63 @@ export default function CheckoutPage() {
                             <CardTitle>Shipping Address</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            {user ? (
+                             {isClient ? (
                                 <div>
-                                    <p className="font-medium">{user.name}</p>
-                                     {/* Placeholder Address - TODO: Use actual user address */}
-                                    <p className="text-muted-foreground">123 Pasal St, Kathmandu, Bagmati 44600</p>
+                                    <p className="font-medium">{currentAddress.name}</p>
+                                    <p className="text-muted-foreground">{currentAddress.address}</p>
+                                    <p className="text-muted-foreground">{currentAddress.city}, {currentAddress.province} {currentAddress.postalCode}</p>
                                     <p className="text-muted-foreground">Nepal</p>
+                                     <p className="text-muted-foreground">Phone: {currentAddress.phoneNumber}</p>
                                 </div>
                             ) : (
                                 <Skeleton className="h-16 w-1/2" />
                             )}
-                            <Button variant="outline" size="sm" className="mt-4" onClick={handleChangeAddress}>Change Address</Button>
-                             {/* TODO: Add address form/selection */}
+                           {/* Address Change Dialog */}
+                           <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
+                             <DialogTrigger asChild>
+                               <Button variant="outline" size="sm" className="mt-4">Change Address</Button>
+                             </DialogTrigger>
+                             <DialogContent className="sm:max-w-[425px]">
+                               <DialogHeader>
+                                 <DialogTitle>Edit Shipping Address</DialogTitle>
+                                 <DialogDescription>
+                                   Update your shipping details here. Click save when you're done.
+                                 </DialogDescription>
+                               </DialogHeader>
+                               <div className="grid gap-4 py-4">
+                                 <div className="grid grid-cols-4 items-center gap-4">
+                                   <Label htmlFor="name" className="text-right">Name</Label>
+                                   <Input id="name" name="name" value={addressFormData.name} onChange={handleAddressFormChange} className="col-span-3" />
+                                 </div>
+                                 <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="address" className="text-right">Address</Label>
+                                    <Input id="address" name="address" value={addressFormData.address} onChange={handleAddressFormChange} className="col-span-3" />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="city" className="text-right">City</Label>
+                                    <Input id="city" name="city" value={addressFormData.city} onChange={handleAddressFormChange} className="col-span-3" />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="province" className="text-right">Province</Label>
+                                    <Input id="province" name="province" value={addressFormData.province} onChange={handleAddressFormChange} className="col-span-3" />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="postalCode" className="text-right">Postal Code</Label>
+                                    <Input id="postalCode" name="postalCode" value={addressFormData.postalCode} onChange={handleAddressFormChange} className="col-span-3" />
+                                  </div>
+                                   <div className="grid grid-cols-4 items-center gap-4">
+                                     <Label htmlFor="phoneNumber" className="text-right">Phone</Label>
+                                     <Input id="phoneNumber" name="phoneNumber" value={addressFormData.phoneNumber} onChange={handleAddressFormChange} className="col-span-3" />
+                                    </div>
+                               </div>
+                               <DialogFooter>
+                                 <DialogClose asChild>
+                                     <Button type="button" variant="secondary">Cancel</Button>
+                                  </DialogClose>
+                                 <Button type="button" onClick={handleSaveAddress}>Save Address</Button>
+                               </DialogFooter>
+                             </DialogContent>
+                           </Dialog>
                         </CardContent>
                     </Card>
 
@@ -189,8 +296,6 @@ export default function CheckoutPage() {
                                     </Label>
                                 </div>
                             </RadioGroup>
-                            {/* Remove the Change Payment Method button as selection is done via radio */}
-                            {/* <Button variant="outline" size="sm" className="mt-4">Change Payment Method</Button> */}
                         </CardContent>
                     </Card>
                 </div>
@@ -202,32 +307,47 @@ export default function CheckoutPage() {
                             <CardTitle className="text-xl font-bold">Order Summary</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {items.map(item => (
-                                <div key={item.id} className="flex justify-between text-sm">
-                                    <span>{item.name} x {item.quantity}</span>
-                                    <span>Rs. {(item.price * item.quantity).toFixed(2)}</span>
-                                </div>
-                            ))}
-                            <Separator />
-                             <div className="flex justify-between">
-                              <span>Subtotal ({totalItems} items)</span>
-                              <span>Rs. {subtotal.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Shipping</span>
-                              {/* Display shipping cost */}
-                              <span>Rs. {shippingCost.toFixed(2)}</span>
-                            </div>
-                            <Separator />
-                            <div className="flex justify-between font-bold text-lg">
-                                <span>Total</span>
-                                {/* Display final total */}
-                                <span>Rs. {finalTotal.toFixed(2)}</span>
-                            </div>
+                             {isClient ? (
+                                <>
+                                    {items.map(item => (
+                                        <div key={item.id} className="flex justify-between text-sm">
+                                            <span>{item.name} x {item.quantity}</span>
+                                            <span>Rs. {(item.price * item.quantity).toFixed(2)}</span>
+                                        </div>
+                                    ))}
+                                    <Separator />
+                                    <div className="flex justify-between">
+                                    <span>Subtotal ({totalItems} items)</span>
+                                    <span>Rs. {subtotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                    <span>Shipping</span>
+                                    {/* Display shipping cost */}
+                                    <span>Rs. {shippingCost.toFixed(2)}</span>
+                                    </div>
+                                    <Separator />
+                                    <div className="flex justify-between font-bold text-lg">
+                                        <span>Total</span>
+                                        {/* Display final total */}
+                                        <span>Rs. {finalTotal.toFixed(2)}</span>
+                                    </div>
+                                </>
+                                ) : (
+                                    <div className="space-y-3">
+                                       <Skeleton className="h-4 w-full" />
+                                       <Skeleton className="h-4 w-3/4" />
+                                       <Separator />
+                                       <Skeleton className="h-5 w-1/2" />
+                                       <Skeleton className="h-5 w-1/3" />
+                                       <Separator />
+                                       <Skeleton className="h-6 w-1/4" />
+                                       <Skeleton className="h-6 w-1/3 ml-auto" />
+                                    </div>
+                                )}
                         </CardContent>
                         <CardFooter>
-                            <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handlePlaceOrder}>
-                                Place Order
+                            <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handlePlaceOrder} disabled={!isClient || items.length === 0}>
+                                {isClient && items.length > 0 ? 'Place Order' : 'Loading...'}
                             </Button>
                         </CardFooter>
                     </Card>
