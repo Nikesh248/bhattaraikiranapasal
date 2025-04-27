@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image'; // Import Image
 import ProductCard from '@/components/product/product-card';
 import { mockProducts } from '@/lib/data';
 import type { Product, Recommendation } from '@/types';
@@ -59,6 +60,24 @@ export default function Home() {
 
   return (
     <div className="space-y-12">
+      {/* Banner Image */}
+      <section className="relative w-full h-64 md:h-80 rounded-lg overflow-hidden shadow-lg">
+        <Image
+          src="https://picsum.photos/seed/pasal_banner/1200/400" // Placeholder banner image
+          alt="Bhattarai Kirana Pasal Banner"
+          fill
+          sizes="(max-width: 768px) 100vw, 1200px"
+          className="object-cover"
+          priority // Prioritize loading for the banner
+        />
+        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+           <h1 className="text-4xl md:text-6xl font-bold text-white text-center drop-shadow-md px-4">
+              Welcome to Bhattarai Kirana Pasal
+            </h1>
+        </div>
+      </section>
+
+
       {recommendations.length > 0 && !isLoadingRecommendations && (
         <section>
            <Alert className="bg-secondary border-primary/50">
