@@ -1,18 +1,23 @@
+
 'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Trash2, Minus, Plus } from 'lucide-react';
 import { useCartStore } from '@/hooks/use-cart';
+import { useAuthStore } from '@/hooks/use-auth'; // Import useAuthStore
 import type { CartItem } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 
 export default function CartPage() {
+  const router = useRouter(); // Initialize useRouter
   const { items, removeFromCart, updateQuantity, getTotalPrice, getTotalItems, clearCart } = useCartStore();
+  const { isAuthenticated } = useAuthStore(); // Get authentication status
   const { toast } = useToast();
 
   const handleRemove = (item: CartItem) => {
@@ -36,7 +41,7 @@ export default function CartPage() {
 
   const handleQuantityChange = (item: CartItem, newQuantity: number) => {
       const validatedQuantity = Math.max(1, Math.min(newQuantity, item.stock));
-      if (validatedQuantity !== newQuantity) {
+      if (validatedQuantity !== newQuantity && newQuantity > item.stock) {
        toast({
          title: "Quantity Limited",
          description: `Maximum stock for ${item.name} is ${item.stock}.`,
@@ -45,6 +50,25 @@ export default function CartPage() {
      }
       updateQuantity(item.id, validatedQuantity);
     };
+
+  const handleProceedToCheckout = () => {
+    if (!isAuthenticated) {
+       toast({
+         title: "Login Required",
+         description: "Please log in to proceed to checkout.",
+         variant: "destructive",
+       });
+      router.push('/login'); // Redirect to login page if not authenticated
+    } else {
+      // User is authenticated, proceed to checkout (assuming /checkout is the route)
+      // In a real app, you might navigate to a specific checkout page or trigger an action
+      router.push('/checkout'); // TODO: Create checkout page/flow
+       toast({
+         title: "Proceeding to Checkout",
+         description: "Redirecting you to the checkout page...",
+       });
+    }
+  };
 
   const totalPrice = getTotalPrice();
   const totalItems = getTotalItems();
@@ -75,6 +99,12 @@ export default function CartPage() {
                     <Link href={`/product/${item.id}`} className="font-semibold hover:text-primary">{item.name}</Link>
                     <p className="text-sm text-muted-foreground">{item.category}</p>
                     <p className="text-sm font-medium">Rs. {item.price.toFixed(2)}</p>
+                     {item.stock < 5 && item.stock > 0 && (
+                       <p className="text-xs text-destructive mt-1">Only {item.stock} left in stock!</p>
+                     )}
+                     {item.stock === 0 && (
+                      <p className="text-xs text-destructive mt-1">Out of stock</p>
+                     )}
                   </div>
                   <div className="flex items-center gap-2 sm:ml-auto">
                      <div className="flex items-center border rounded-md">
@@ -94,15 +124,20 @@ export default function CartPage() {
                           max={item.stock}
                           value={item.quantity}
                           onChange={(e) => handleQuantityChange(item, parseInt(e.target.value, 10) || 1)}
+                           onBlur={(e) => { // Ensure quantity doesn't exceed stock on blur
+                             const val = parseInt(e.target.value, 10) || 1;
+                             handleQuantityChange(item, Math.min(val, item.stock));
+                            }}
                           className="h-8 w-12 text-center border-0 focus-visible:ring-0 [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none"
                           aria-label={`Quantity for ${item.name}`}
+                          disabled={item.stock === 0}
                         />
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
                         onClick={() => handleQuantityChange(item, item.quantity + 1)}
-                        disabled={item.quantity >= item.stock}
+                        disabled={item.quantity >= item.stock || item.stock === 0}
                          aria-label={`Increase quantity of ${item.name}`}
                       >
                         <Plus className="h-4 w-4" />
@@ -134,7 +169,7 @@ export default function CartPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span>Subtotal</span>
+              <span>Subtotal ({totalItems} items)</span>
               <span>Rs. {totalPrice.toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
@@ -152,13 +187,19 @@ export default function CartPage() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={items.length === 0}>
+            <Button
+              size="lg"
+              className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+              disabled={items.length === 0}
+              onClick={handleProceedToCheckout} // Add onClick handler
+            >
               Proceed to Checkout
             </Button>
-            {/* Link to checkout page: <Link href="/checkout"><Button>...</Button></Link> */}
           </CardFooter>
         </Card>
       </div>
     </div>
   );
 }
+
+    
