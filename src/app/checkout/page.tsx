@@ -6,26 +6,38 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/hooks/use-auth';
 import { useCartStore } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'; // Added CardFooter import
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CreditCard, MapPin, AlertCircle } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function CheckoutPage() {
     const { isAuthenticated, user } = useAuthStore();
     const { items, getTotalPrice, getTotalItems, clearCart } = useCartStore();
     const router = useRouter();
+    const { toast } = useToast();
 
     useEffect(() => {
         // If user is not authenticated or cart is empty, redirect them
         if (!isAuthenticated) {
+             toast({
+                title: "Login Required",
+                description: "Please log in to proceed to checkout.",
+                variant: "destructive",
+             });
             router.push('/login');
         } else if (items.length === 0) {
+             toast({
+               title: "Cart Empty",
+               description: "Cannot proceed to checkout with an empty cart.",
+               variant: "destructive",
+              });
             router.push('/cart');
         }
-    }, [isAuthenticated, items, router]);
+    }, [isAuthenticated, items, router, toast]);
 
     const handlePlaceOrder = () => {
         // Simulate placing the order
@@ -35,11 +47,17 @@ export default function CheckoutPage() {
         // Clear the cart after placing the order
         clearCart();
 
+        // Show success toast
+        toast({
+             title: "Order Placed!",
+             description: "Thank you for your purchase. Redirecting to home..."
+            });
+
         // Redirect to an order confirmation page (or show a success message)
-        // For now, redirect to home
-        router.push('/');
-        // Consider using toast for confirmation
-        // toast({ title: "Order Placed!", description: "Thank you for your purchase." });
+        // For now, redirect to home after a short delay
+        setTimeout(() => {
+            router.push('/');
+        }, 1500); // Delay redirect slightly to allow toast visibility
     };
 
     // Show loading state while checking auth or cart
@@ -152,5 +170,3 @@ export default function CheckoutPage() {
         </div>
     );
 }
-
-    
