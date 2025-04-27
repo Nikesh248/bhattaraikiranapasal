@@ -88,7 +88,7 @@ export default function LoginPage() {
     <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Login to PasalPal</CardTitle>
+          <CardTitle className="text-2xl font-bold">Login to Bhattarai Kirana Pasal</CardTitle>
           <CardDescription>Enter your email and password below</CardDescription>
         </CardHeader>
         <CardContent>

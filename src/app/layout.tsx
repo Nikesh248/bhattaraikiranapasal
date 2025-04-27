@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'PasalPal - Your Online Shop',
-  description: 'Shop groceries, electronics, fashion, and more!',
+  title: 'Bhattarai Kirana Pasal - Your Local Shop',
+  description: 'Shop groceries, essentials, and more!',
 };
 
 export default function RootLayout({

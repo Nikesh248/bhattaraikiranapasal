@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>()(
       signup: (userData) => set({ user: userData, isAuthenticated: true }),
     }),
     {
-      name: 'pasalpal-auth-storage', // unique name
+      name: 'bhattarai-kirana-pasal-auth-storage', // unique name
       storage: createJSONStorage(() => localStorage), // use localStorage
       // Only persist the user and isAuthenticated status
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),

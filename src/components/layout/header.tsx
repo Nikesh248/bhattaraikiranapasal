@@ -33,14 +33,11 @@ export default function Header() {
   const [isClient, setIsClient] = useState(false);
 
   // Get cart state after client-side mount
-  // We need to access the store hook after ensuring we are on the client
   const totalItems = useCartStore((state) => (isClient ? state.getTotalItems() : 0));
   const addSearchTerm = useCartStore((state) => state.addSearchTerm);
 
 
   useEffect(() => {
-    // This effect runs only on the client after initial render
-    // and sets the flag to true, triggering a re-render
     setIsClient(true);
   }, []);
 
@@ -93,8 +90,8 @@ export default function Header() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Left Side: Logo and Desktop Nav */}
         <div className="flex items-center gap-4">
-          <Link href="/" className="text-2xl font-bold text-primary">
-            PasalPal
+          <Link href="/" className="text-2xl font-bold text-primary whitespace-nowrap">
+            Bhattarai Kirana Pasal
           </Link>
           <nav className="hidden md:flex items-center gap-4">
             {navItems.map((item) => (
@@ -133,16 +130,19 @@ export default function Header() {
                   {totalItems}
                 </Badge>
               )}
-              {/* Screen reader text is handled by aria-label on Link */}
+              {/* Static text for initial render */}
+              {!isClient && <span className="sr-only">{cartLabel}</span>}
+              {/* Dynamic text for screen readers after hydration */}
+              {isClient && <span className="sr-only">{dynamicCartLabel}</span>}
             </Button>
           </Link>
 
           {/* Auth Dropdown / Login Button (Desktop) */}
            {/* Wrapper with fixed size to prevent layout shifts during hydration */}
-           <div className="hidden md:flex h-8 w-20 items-center justify-center">
+           <div className="hidden md:flex h-10 w-24 items-center justify-center"> {/* Adjusted width for longer button text */}
              {!isClient ? (
                 // Render skeleton initially on both server and client
-                <Skeleton className="h-8 w-full rounded-md" />
+                <Skeleton className="h-8 w-20 rounded-md" />
              ) : isAuthenticated && user ? (
                  // Render DropdownMenu when client hydrated and user logged in
                  <DropdownMenu>
@@ -179,8 +179,8 @@ export default function Header() {
                 ) : (
                   // Render Login button when client hydrated and user logged out
                  <Link href="/login" passHref legacyBehavior>
-                   <Button as="a" variant="ghost" className="text-foreground hover:text-primary">
-                      <LogIn className="mr-2 h-4 w-4" /> Login
+                   <Button as="a" variant="ghost" className="text-foreground hover:text-primary text-sm">
+                      <LogIn className="mr-1 h-4 w-4" /> Login
                    </Button>
                  </Link>
                )}

@@ -23,19 +23,37 @@ export const useCartStore = create<CartState>()(
         set((state) => {
           const existingItem = state.items.find((item) => item.id === product.id);
           if (existingItem) {
-            return {
-              items: state.items.map((item) =>
-                item.id === product.id
-                  ? { ...item, quantity: Math.min(item.quantity + quantity, product.stock) }
-                  : item
-              ),
-            };
+            // Calculate potential new quantity
+            const potentialQuantity = existingItem.quantity + quantity;
+             // If potential quantity doesn't exceed stock, update it
+             if (potentialQuantity <= product.stock) {
+                return {
+                  items: state.items.map((item) =>
+                    item.id === product.id
+                      ? { ...item, quantity: potentialQuantity }
+                      : item
+                  ),
+                };
+            } else {
+                // If it exceeds stock, set quantity to max available stock
+                return {
+                   items: state.items.map((item) =>
+                     item.id === product.id
+                       ? { ...item, quantity: product.stock }
+                       : item
+                   ),
+                 };
+            }
           } else {
+             // If adding a new item, ensure initial quantity doesn't exceed stock
              if (quantity <= product.stock) {
                return { items: [...state.items, { ...product, quantity }] };
+             } else {
+               // Optionally, add with max stock or prevent adding if initial quantity > stock
+                console.warn(`Attempted to add ${product.name} with quantity ${quantity}, but only ${product.stock} in stock. Adding with max stock.`);
+                return { items: [...state.items, { ...product, quantity: product.stock }] };
              }
           }
-          return state; // Return current state if quantity exceeds stock
         }),
       removeFromCart: (productId) =>
         set((state) => ({
@@ -43,11 +61,14 @@ export const useCartStore = create<CartState>()(
         })),
       updateQuantity: (productId, quantity) =>
         set((state) => ({
-          items: state.items.map((item) =>
-             item.id === productId
-              ? { ...item, quantity: Math.max(1, Math.min(quantity, item.stock)) } // Ensure quantity is at least 1 and not more than stock
-              : item
-          ),
+          items: state.items.map((item) => {
+            if (item.id === productId) {
+              // Ensure quantity is at least 1 and not more than stock
+               const validatedQuantity = Math.max(1, Math.min(quantity, item.stock));
+               return { ...item, quantity: validatedQuantity };
+            }
+            return item;
+          }),
         })),
       clearCart: () => set({ items: [] }),
       getTotalItems: () => get().items.reduce((total, item) => total + item.quantity, 0),
@@ -61,7 +82,7 @@ export const useCartStore = create<CartState>()(
         }),
     }),
     {
-      name: 'pasalpal-cart-storage', // unique name
+      name: 'bhattarai-kirana-pasal-cart-storage', // unique name
       storage: createJSONStorage(() => localStorage), // use localStorage
     }
   )
