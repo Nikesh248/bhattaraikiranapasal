@@ -65,6 +65,16 @@ export default function CheckoutPage() {
         }, 1500); // Delay redirect slightly to allow toast visibility
     };
 
+    const handleChangeAddress = () => {
+        // Redirect to signup page as requested
+        router.push('/signup');
+        // Optionally, show a toast message
+        // toast({
+        //   title: "Redirecting",
+        //   description: "Please sign up or log in to manage addresses.",
+        // });
+    };
+
     // Show loading state while checking auth or cart is empty (but allow viewing page if directly navigated)
      if (!isClient) { // Only show full skeleton if not authenticated or client not hydrated
         return (
@@ -135,7 +145,7 @@ export default function CheckoutPage() {
                             ) : (
                                 <Skeleton className="h-16 w-1/2" />
                             )}
-                            <Button variant="outline" size="sm" className="mt-4">Change Address</Button>
+                            <Button variant="outline" size="sm" className="mt-4" onClick={handleChangeAddress}>Change Address</Button>
                              {/* TODO: Add address form/selection */}
                         </CardContent>
                     </Card>
