@@ -1,13 +1,18 @@
 
 import type { Product } from '@/types';
 
+// Note: Local file paths like "C:\Users\..." cannot be used directly in web applications.
+// We are using placeholder images from picsum.photos.
+// To use specific images, they need to be hosted online or placed in the public directory of the Next.js app.
+
 export const mockProducts: Product[] = [
   {
     id: 'prod_001',
     name: 'Organic Apples',
     description: 'Fresh and juicy organic apples, perfect for snacking.',
     price: 2.50,
-    imageUrl: 'https://picsum.photos/seed/pasal_shop/400/300', // Using a placeholder image
+    // Using a placeholder image - changed seed slightly for variety
+    imageUrl: 'https://picsum.photos/seed/pasal_apples/400/300',
     category: 'Groceries',
     stock: 100,
   },
@@ -22,12 +27,13 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod_003',
-    name: 'Coca-Cola', // Changed name to match image
+    name: 'Coca-Cola', // Changed name to match image request
     description: 'Refreshing Coca-Cola soft drink.', // Changed description
     price: 1.50, // Adjusted price
-    imageUrl: 'https://picsum.photos/seed/coca_cola/400/300', // Changed image URL
-    category: 'Groceries', // Changed category
-    stock: 150, // Adjusted stock
+    // Using the placeholder image intended for Coca-Cola
+    imageUrl: 'https://picsum.photos/seed/coca_cola/400/300',
+    category: 'Groceries',
+    stock: 150,
   },
   {
     id: 'prod_004',
@@ -52,7 +58,8 @@ export const mockProducts: Product[] = [
     name: 'Running Shoes',
     description: 'Lightweight and supportive running shoes for men and women.',
     price: 79.99,
-    imageUrl: 'https://picsum.photos/seed/shop_exterior/400/300', // Using another placeholder image
+     // Using a placeholder image - changed seed slightly for variety
+    imageUrl: 'https://picsum.photos/seed/pasal_shoes/400/300',
     category: 'Fashion',
     stock: 75,
   },
