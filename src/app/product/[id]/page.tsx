@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -6,14 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, Minus, Plus } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation'; // Import useParams
 import type { Product } from '@/types';
 import { getProductById } from '@/lib/data';
 import { useCartStore } from '@/hooks/use-cart';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
 
-export default function ProductDetailsPage({ params }: { params: { id: string } }) {
+export default function ProductDetailsPage() {
+  // Use useParams hook to get route parameters
+  const params = useParams<{ id: string }>();
+  const productId = params.id;
+
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -21,30 +26,35 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
    const { toast } = useToast();
 
   useEffect(() => {
-    const fetchedProduct = getProductById(params.id);
-    if (fetchedProduct) {
-      setProduct(fetchedProduct);
+    if (productId) {
+      const fetchedProduct = getProductById(productId);
+      if (fetchedProduct) {
+        setProduct(fetchedProduct);
+      } else {
+        // Handle not found case properly in client component
+        console.error("Product not found");
+        // Cannot call notFound() directly in useEffect. Set state or redirect.
+        setProduct(null); // Ensure product state reflects not found
+      }
+      setIsLoading(false);
     } else {
-      // Handle not found case properly in client component
-      // For now, just log it. In a real app, you might redirect or show a message.
-      console.error("Product not found");
-      // Consider using next/navigation's notFound() if applicable here,
-      // though typically it's used in Server Components or during build time.
+        // Handle case where productId is not available yet or invalid
+        setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [params.id]);
+  }, [productId]); // Depend on productId from useParams
 
   if (isLoading) {
     return <ProductSkeleton />;
   }
 
   if (!product) {
-    // Render a not found message or redirect
-    // notFound(); // This hook can only be used in Server Components
+     // Render a not found message or redirect
      return (
-        <div className="flex flex-col items-center justify-center h-full text-center">
+        <div className="flex flex-col items-center justify-center h-full text-center mt-10">
           <h1 className="text-4xl font-bold mb-4">Product Not Found</h1>
           <p className="text-muted-foreground">Sorry, we couldn't find the product you were looking for.</p>
+          {/* Optional: Add a button to go back or to the home page */}
+           {/* <Button onClick={() => router.push('/')} className="mt-4">Go Home</Button> */}
         </div>
       );
   }
@@ -72,6 +82,7 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-contain"
+              priority // Add priority for LCP images
             />
           </div>
         </CardHeader>
@@ -98,16 +109,19 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
                 className="h-8 w-8"
                 onClick={() => handleQuantityChange(-1)}
                 disabled={quantity <= 1 || product.stock <= 0}
+                aria-label={`Decrease quantity of ${product.name}`}
               >
                 <Minus className="h-4 w-4" />
               </Button>
-              <span className="w-10 text-center font-medium">{quantity}</span>
+              {/* Use a span instead of input for displaying quantity to avoid direct editing */}
+              <span className="w-10 text-center font-medium" aria-live="polite">{quantity}</span>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
                 onClick={() => handleQuantityChange(1)}
                  disabled={quantity >= product.stock || product.stock <= 0}
+                 aria-label={`Increase quantity of ${product.name}`}
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -154,3 +168,4 @@ function ProductSkeleton() {
      </Card>
   );
 }
+
