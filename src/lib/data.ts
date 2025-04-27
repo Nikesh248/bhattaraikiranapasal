@@ -7,9 +7,7 @@ export const mockProducts: Product[] = [
     name: 'Organic Apples',
     description: 'Fresh and juicy organic apples, perfect for snacking.',
     price: 2.50,
-    // Keep using a web-accessible URL like picsum or a hosted image.
-    // Local path "C:\Users\nik esh\OneDrive\Pictures\Screenshots\width1338.webp" is not valid here.
-    imageUrl: 'https://picsum.photos/seed/apples/400/300',
+    imageUrl: 'https://picsum.photos/seed/pasal_shop/400/300', // Using a placeholder image
     category: 'Groceries',
     stock: 100,
   },
@@ -24,12 +22,12 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod_003',
-    name: 'Cotton T-Shirt',
-    description: 'Comfortable 100% cotton t-shirt, available in various colors.',
-    price: 19.99,
-    imageUrl: 'https://picsum.photos/seed/tshirt/400/300',
-    category: 'Fashion',
-    stock: 200,
+    name: 'Coca-Cola', // Changed name to match image
+    description: 'Refreshing Coca-Cola soft drink.', // Changed description
+    price: 1.50, // Adjusted price
+    imageUrl: 'https://picsum.photos/seed/coca_cola/400/300', // Changed image URL
+    category: 'Groceries', // Changed category
+    stock: 150, // Adjusted stock
   },
   {
     id: 'prod_004',
@@ -54,9 +52,7 @@ export const mockProducts: Product[] = [
     name: 'Running Shoes',
     description: 'Lightweight and supportive running shoes for men and women.',
     price: 79.99,
-    // Keep using a web-accessible URL like picsum or a hosted image.
-    // Local path "C:\Users\nik esh\OneDrive\Pictures\Screenshots\width1338.webp" is not valid here.
-    imageUrl: 'https://picsum.photos/seed/shoes/400/300',
+    imageUrl: 'https://picsum.photos/seed/shop_exterior/400/300', // Using another placeholder image
     category: 'Fashion',
     stock: 75,
   },
