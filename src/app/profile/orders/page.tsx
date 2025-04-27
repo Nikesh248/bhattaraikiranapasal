@@ -21,8 +21,8 @@ interface Order {
 export default function OrderHistoryPage() {
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [orders, setOrders] = useState<Order[]>([]); // State to hold orders
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [orders, setOrders] = React.useState<Order[]>([]); // State to hold orders
 
   useEffect(() => {
     // Redirect if not authenticated
@@ -51,6 +51,7 @@ export default function OrderHistoryPage() {
    const formatDateTime = (dateTimeString: string) => {
       try {
         const date = new Date(dateTimeString);
+        // This format includes both date and time
         return `${date.toLocaleDateString()} at ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
       } catch (e) {
          console.error("Error formatting date:", e);
