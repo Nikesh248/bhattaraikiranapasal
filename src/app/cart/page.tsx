@@ -14,6 +14,7 @@ import { useCartStore } from '@/hooks/use-cart';
 import { useAuthStore } from '@/hooks/use-auth'; // Import useAuthStore
 import type { CartItem } from '@/types';
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 export default function CartPage() {
   const router = useRouter(); // Initialize useRouter
@@ -21,6 +22,8 @@ export default function CartPage() {
   const { isAuthenticated } = useAuthStore(); // Get authentication status
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false); // Add isClient state
+
+  const shippingCost = 150.00; // Define shipping cost
 
   useEffect(() => {
     // This effect runs only on the client after initial render
@@ -86,17 +89,18 @@ export default function CartPage() {
   };
 
   // Calculate totals after client-side mount
-  const totalPrice = isClient ? getTotalPrice() : 0;
-  const totalItems = isClient ? getTotalItems() : 0;
+  const subtotal = isClient ? getTotalPrice() : 0;
+  const totalItemsCount = isClient ? getTotalItems() : 0;
+  const finalTotal = isClient ? subtotal + shippingCost : 0;
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
       <div className="md:col-span-2">
         <Card className="shadow-lg">
           <CardHeader>
-            {/* Conditionally render totalItems */}
+            {/* Conditionally render totalItemsCount */}
             <CardTitle className="text-2xl font-bold">
-              Your Shopping Cart {isClient ? `(${totalItems} items)` : ''}
+              Your Shopping Cart {isClient ? `(${totalItemsCount} items)` : ''}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -104,15 +108,15 @@ export default function CartPage() {
             {!isClient ? (
                <div className="space-y-4">
                  <div className="flex gap-4 border-b pb-4">
-                   <div className="h-20 w-20 rounded-md bg-muted animate-pulse"></div>
+                   <Skeleton className="h-20 w-20 rounded-md bg-muted animate-pulse" />
                    <div className="flex-grow space-y-2">
-                      <div className="h-4 w-3/4 bg-muted animate-pulse rounded"></div>
-                      <div className="h-4 w-1/2 bg-muted animate-pulse rounded"></div>
-                      <div className="h-4 w-1/4 bg-muted animate-pulse rounded"></div>
+                      <Skeleton className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+                      <Skeleton className="h-4 w-1/2 bg-muted animate-pulse rounded" />
+                      <Skeleton className="h-4 w-1/4 bg-muted animate-pulse rounded" />
                    </div>
                    <div className="flex items-center gap-2 ml-auto">
-                      <div className="h-8 w-24 bg-muted animate-pulse rounded-md"></div>
-                       <div className="h-8 w-8 bg-muted animate-pulse rounded-md"></div>
+                      <Skeleton className="h-8 w-24 bg-muted animate-pulse rounded-md" />
+                       <Skeleton className="h-8 w-8 bg-muted animate-pulse rounded-md" />
                    </div>
                  </div>
                </div>
@@ -206,29 +210,23 @@ export default function CartPage() {
              {/* Show skeleton while loading */}
              {!isClient ? (
                <div className="space-y-3">
-                  <div className="flex justify-between">
-                      <div className="h-4 w-2/5 bg-muted animate-pulse rounded"></div>
-                      <div className="h-4 w-1/5 bg-muted animate-pulse rounded"></div>
-                  </div>
-                   <div className="flex justify-between">
-                      <div className="h-4 w-1/4 bg-muted animate-pulse rounded"></div>
-                       <div className="h-4 w-1/6 bg-muted animate-pulse rounded"></div>
-                  </div>
+                  <Skeleton className="h-4 w-2/5 rounded" />
+                  <Skeleton className="h-4 w-1/5 ml-auto rounded" />
+                  <Skeleton className="h-4 w-1/4 rounded" />
+                  <Skeleton className="h-4 w-1/6 ml-auto rounded" />
                   <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                       <div className="h-6 w-1/5 bg-muted animate-pulse rounded"></div>
-                       <div className="h-6 w-1/4 bg-muted animate-pulse rounded"></div>
-                  </div>
+                  <Skeleton className="h-6 w-1/5 rounded" />
+                  <Skeleton className="h-6 w-1/4 ml-auto rounded" />
                </div>
              ) : (
                 <>
                   <div className="flex justify-between">
-                    <span>Subtotal ({totalItems} items)</span>
-                    <span>Rs. {totalPrice.toFixed(2)}</span>
+                    <span>Subtotal ({totalItemsCount} items)</span>
+                    <span>Rs. {subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
-                    <span className="text-primary">Free</span> {/* Or calculate shipping */}
+                    <span>Rs. {shippingCost.toFixed(2)}</span> {/* Display shipping cost */}
                   </div>
                    <div className="flex justify-between">
                     <span>Discount Code</span>
@@ -237,7 +235,7 @@ export default function CartPage() {
                   <Separator />
                   <div className="flex justify-between font-bold text-lg">
                     <span>Total</span>
-                    <span>Rs. {totalPrice.toFixed(2)}</span>
+                    <span>Rs. {finalTotal.toFixed(2)}</span> {/* Display final total */}
                   </div>
                </>
             )}
@@ -259,4 +257,4 @@ export default function CartPage() {
 }
 
 
-    
+```
