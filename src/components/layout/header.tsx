@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useCartStore } from '@/hooks/use-cart';
 import { useAuthStore } from '@/hooks/use-auth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,11 +26,21 @@ import { useToast } from '@/hooks/use-toast';
 export default function Header() {
   const router = useRouter();
   const { toast } = useToast();
-  const totalItems = useCartStore((state) => state.getTotalItems());
-  const addSearchTerm = useCartStore((state) => state.addSearchTerm);
   const { user, isAuthenticated, logout } = useAuthStore();
   const [searchTerm, setSearchTerm] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Get cart state after client-side mount
+  const totalItems = useCartStore((state) => state.getTotalItems());
+  const addSearchTerm = useCartStore((state) => state.addSearchTerm);
+
+
+  useEffect(() => {
+    // This effect runs only on the client after initial render
+    setIsClient(true);
+  }, []);
+
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -69,6 +79,9 @@ export default function Header() {
     { href: '/category/Home', label: 'Home' },
   ];
 
+  // Determine cart label based on client state
+  const cartLabel = isClient ? `Shopping Cart with ${totalItems} items` : 'Shopping Cart';
+
   return (
     <header className="bg-secondary sticky top-0 z-50 shadow-md">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -105,10 +118,11 @@ export default function Header() {
           </form>
 
           {/* Cart */}
-          <Link href="/cart" aria-label={`Shopping Cart with ${totalItems} items`}>
+          <Link href="/cart" aria-label={cartLabel}>
             <Button variant="ghost" size="icon" className="relative text-foreground hover:text-primary">
               <ShoppingCart className="h-5 w-5" />
-              {totalItems > 0 && (
+              {/* Only render the badge on the client */}
+              {isClient && totalItems > 0 && (
                 <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0 text-xs">
                   {totalItems}
                 </Badge>
@@ -118,47 +132,56 @@ export default function Header() {
           </Link>
 
           {/* Auth Dropdown / Login Button (Desktop) */}
-          <div className="hidden md:flex">
-             {isAuthenticated && user ? (
-               <DropdownMenu>
-                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
-                         <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
-                        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-                      </Avatar>
-                     </Button>
-                 </DropdownMenuTrigger>
-                 <DropdownMenuContent className="w-56" align="end" forceMount>
-                   <DropdownMenuLabel className="font-normal">
-                     <div className="flex flex-col space-y-1">
-                       <p className="text-sm font-medium leading-none">{user.name}</p>
-                       <p className="text-xs leading-none text-muted-foreground">
-                         {user.email}
-                       </p>
-                     </div>
-                   </DropdownMenuLabel>
-                   <DropdownMenuSeparator />
-                   <DropdownMenuItem asChild>
-                     <Link href="/profile">
-                       <User className="mr-2 h-4 w-4" />
-                       <span>Profile</span>
-                     </Link>
-                   </DropdownMenuItem>
-                   <DropdownMenuItem onClick={handleLogout}>
-                     <LogOut className="mr-2 h-4 w-4" />
-                     <span>Log out</span>
-                   </DropdownMenuItem>
-                 </DropdownMenuContent>
-               </DropdownMenu>
-              ) : (
-               <Link href="/login">
-                 <Button variant="ghost" className="text-foreground hover:text-primary">
-                   <LogIn className="mr-2 h-4 w-4" /> Login
-                 </Button>
-               </Link>
+           {/* Only render auth status on the client */}
+           <div className="hidden md:flex">
+             {isClient ? (
+               isAuthenticated && user ? (
+                 <DropdownMenu>
+                   <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                        <Avatar className="h-8 w-8">
+                           <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
+                          <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                        </Avatar>
+                       </Button>
+                   </DropdownMenuTrigger>
+                   <DropdownMenuContent className="w-56" align="end" forceMount>
+                     <DropdownMenuLabel className="font-normal">
+                       <div className="flex flex-col space-y-1">
+                         <p className="text-sm font-medium leading-none">{user.name}</p>
+                         <p className="text-xs leading-none text-muted-foreground">
+                           {user.email}
+                         </p>
+                       </div>
+                     </DropdownMenuLabel>
+                     <DropdownMenuSeparator />
+                     <DropdownMenuItem asChild>
+                       <Link href="/profile">
+                         <User className="mr-2 h-4 w-4" />
+                         <span>Profile</span>
+                       </Link>
+                     </DropdownMenuItem>
+                     <DropdownMenuItem onClick={handleLogout}>
+                       <LogOut className="mr-2 h-4 w-4" />
+                       <span>Log out</span>
+                     </DropdownMenuItem>
+                   </DropdownMenuContent>
+                 </DropdownMenu>
+                ) : (
+                 <Link href="/login">
+                   <Button variant="ghost" className="text-foreground hover:text-primary">
+                     <LogIn className="mr-2 h-4 w-4" /> Login
+                   </Button>
+                 </Link>
+               )
+             ) : (
+                // Placeholder or skeleton while client state is loading
+                <Button variant="ghost" className="text-foreground hover:text-primary" disabled>
+                  <LogIn className="mr-2 h-4 w-4" /> Login
+                </Button>
              )}
            </div>
+
 
           {/* Mobile Menu */}
           <div className="md:hidden">
@@ -200,33 +223,40 @@ export default function Header() {
                   ))}
                 </nav>
 
-                 {/* Mobile Auth Section */}
+                 {/* Mobile Auth Section - Only render on client */}
                   <div className="mt-auto pt-4 border-t border-border">
-                   {isAuthenticated && user ? (
-                      <div className="space-y-2">
-                         <Link
-                           href="/profile"
-                           className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-foreground hover:text-primary transition-colors rounded-md hover:bg-primary/10"
-                           onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                           <User className="h-5 w-5" /> Profile
-                         </Link>
-                         <Button
-                           variant="ghost"
-                           onClick={handleLogout}
-                           className="w-full justify-start px-2 py-2 text-lg font-medium text-destructive hover:text-destructive hover:bg-destructive/10"
+                   {isClient ? (
+                     isAuthenticated && user ? (
+                        <div className="space-y-2">
+                           <Link
+                             href="/profile"
+                             className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-foreground hover:text-primary transition-colors rounded-md hover:bg-primary/10"
+                             onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                             <User className="h-5 w-5" /> Profile
+                           </Link>
+                           <Button
+                             variant="ghost"
+                             onClick={handleLogout}
+                             className="w-full justify-start px-2 py-2 text-lg font-medium text-destructive hover:text-destructive hover:bg-destructive/10"
+                           >
+                             <LogOut className="mr-2 h-5 w-5" /> Logout
+                           </Button>
+                         </div>
+                     ) : (
+                        <Link
+                          href="/login"
+                          className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-foreground hover:text-primary transition-colors rounded-md hover:bg-primary/10"
+                          onClick={() => setIsMobileMenuOpen(false)}
                          >
-                           <LogOut className="mr-2 h-5 w-5" /> Logout
-                         </Button>
-                       </div>
+                         <LogIn className="mr-2 h-5 w-5" /> Login
+                        </Link>
+                     )
                    ) : (
-                      <Link
-                        href="/login"
-                        className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-foreground hover:text-primary transition-colors rounded-md hover:bg-primary/10"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                       >
-                       <LogIn className="mr-2 h-5 w-5" /> Login
-                      </Link>
+                      // Placeholder for mobile auth section
+                      <div className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-muted-foreground">
+                         <LogIn className="mr-2 h-5 w-5" /> Loading...
+                      </div>
                    )}
                  </div>
 
