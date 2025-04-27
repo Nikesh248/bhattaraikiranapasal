@@ -1,16 +1,18 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/hooks/use-auth';
 import { useCartStore } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'; // Added CardFooter import
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CreditCard, MapPin, AlertCircle } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { CreditCard, MapPin, AlertCircle, Banknote, Landmark } from 'lucide-react'; // Added Banknote, Landmark
 import { useToast } from "@/hooks/use-toast";
 
 
@@ -19,6 +21,7 @@ export default function CheckoutPage() {
     const { items, getTotalPrice, getTotalItems, clearCart } = useCartStore();
     const router = useRouter();
     const { toast } = useToast();
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash'); // State for payment method
 
     useEffect(() => {
         // If user is not authenticated or cart is empty, redirect them
@@ -29,7 +32,7 @@ export default function CheckoutPage() {
                 variant: "destructive",
              });
             router.push('/login');
-        } else if (items.length === 0) {
+        } else if (items.length === 0 && !router.pathname?.startsWith('/checkout')) { // Avoid redirect loop if already on checkout
              toast({
                title: "Cart Empty",
                description: "Cannot proceed to checkout with an empty cart.",
@@ -41,8 +44,8 @@ export default function CheckoutPage() {
 
     const handlePlaceOrder = () => {
         // Simulate placing the order
-        console.log("Placing order for user:", user?.email, "Items:", items);
-        // TODO: Implement actual order placement logic (API call, etc.)
+        console.log("Placing order for user:", user?.email, "Items:", items, "Payment Method:", selectedPaymentMethod);
+        // TODO: Implement actual order placement logic (API call, payment integration, etc.)
 
         // Clear the cart after placing the order
         clearCart();
@@ -50,7 +53,7 @@ export default function CheckoutPage() {
         // Show success toast
         toast({
              title: "Order Placed!",
-             description: "Thank you for your purchase. Redirecting to home..."
+             description: `Thank you for your purchase using ${selectedPaymentMethod}. Redirecting to home...`
             });
 
         // Redirect to an order confirmation page (or show a success message)
@@ -60,8 +63,8 @@ export default function CheckoutPage() {
         }, 1500); // Delay redirect slightly to allow toast visibility
     };
 
-    // Show loading state while checking auth or cart
-     if (!isAuthenticated || items.length === 0) {
+    // Show loading state while checking auth or cart is empty (but allow viewing page if directly navigated)
+     if (!isAuthenticated) { // Only show full skeleton if not authenticated
         return (
           <div className="container mx-auto py-8">
             <Skeleton className="h-12 w-1/4 mb-6" />
@@ -78,6 +81,24 @@ export default function CheckoutPage() {
         );
     }
 
+     // Handle case where cart becomes empty after reaching checkout
+      if (items.length === 0 && isAuthenticated) {
+         return (
+             <div className="container mx-auto py-8 text-center">
+                 <h1 className="text-3xl font-bold mb-6">Checkout</h1>
+                 <Alert variant="destructive">
+                   <AlertCircle className="h-4 w-4" />
+                   <AlertTitle>Cart Empty</AlertTitle>
+                   <AlertDescription>
+                     Your cart is empty. Please add items before checking out.
+                     <Button onClick={() => router.push('/')} className="mt-4">Continue Shopping</Button>
+                   </AlertDescription>
+                 </Alert>
+             </div>
+         );
+      }
+
+
     const totalPrice = getTotalPrice();
     const totalItems = getTotalItems();
 
@@ -85,11 +106,11 @@ export default function CheckoutPage() {
         <div className="container mx-auto py-8">
             <h1 className="text-3xl font-bold mb-6">Checkout</h1>
 
-            {!user && (
+            {!user && isAuthenticated && ( // Show warning if user details missing but authenticated
                  <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>Could not load user details. Please try logging in again.</AlertDescription>
+                  <AlertDescription>Could not load user details. Order might proceed but user info may be missing.</AlertDescription>
                  </Alert>
             )}
 
@@ -103,13 +124,12 @@ export default function CheckoutPage() {
                         </CardHeader>
                         <CardContent>
                             {user ? (
-                                <p>
-                                    {user.name}<br />
-                                    {/* Placeholder Address */}
-                                    123 Pasal St,<br />
-                                    Kathmandu, Bagmati 44600<br />
-                                    Nepal
-                                </p>
+                                <div>
+                                    <p className="font-medium">{user.name}</p>
+                                     {/* Placeholder Address - TODO: Use actual user address */}
+                                    <p className="text-muted-foreground">123 Pasal St, Kathmandu, Bagmati 44600</p>
+                                    <p className="text-muted-foreground">Nepal</p>
+                                </div>
                             ) : (
                                 <Skeleton className="h-16 w-1/2" />
                             )}
@@ -124,9 +144,38 @@ export default function CheckoutPage() {
                             <CardTitle>Payment Method</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p>Cash on Delivery (Default)</p>
-                            <Button variant="outline" size="sm" className="mt-4">Change Payment Method</Button>
-                            {/* TODO: Add payment method selection (eSewa, Khalti, Card) */}
+                             <RadioGroup value={selectedPaymentMethod} onValueChange={setSelectedPaymentMethod} className="space-y-3">
+                                <div className="flex items-center space-x-3 p-3 border rounded-md hover:bg-secondary/50 transition-colors">
+                                    <RadioGroupItem value="cash" id="cash" />
+                                    <Label htmlFor="cash" className="flex items-center gap-2 cursor-pointer flex-grow">
+                                        <Banknote className="h-5 w-5 text-green-600" /> Cash on Delivery
+                                    </Label>
+                                </div>
+                                 <div className="flex items-center space-x-3 p-3 border rounded-md hover:bg-secondary/50 transition-colors">
+                                    <RadioGroupItem value="esewa" id="esewa" />
+                                     {/* Placeholder SVG for eSewa */}
+                                     <Label htmlFor="esewa" className="flex items-center gap-2 cursor-pointer flex-grow">
+                                        <svg width="20" height="20" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M88.293 111.819H39.707a4.001 4.001 0 0 1-3.835-5.159l14.25-42.748a4 4 0 0 1 3.835-2.84h30.136a4 4 0 0 1 3.835 2.84l14.25 42.749a4.001 4.001 0 0 1-3.835 5.158Z" fill="#61BC47"></path><path d="M117.22 48.599 94.803 42.12a4 4 0 0 0-4.421 1.316L68.57 68.044H59.43L37.618 43.436a4 4 0 0 0-4.421-1.316L10.78 48.6a4.001 4.001 0 0 0-2.78 4.82l10.38 31.14h101.24l10.38-31.14a4.001 4.001 0 0 0-2.78-4.821Z" fill="#84C44F"></path><path d="M64 52.818a12.181 12.181 0 1 1 0-24.363 12.181 12.181 0 0 1 0 24.363Z" fill="#60BA46"></path><path d="M64 22.455a12.181 12.181 0 1 1 0-24.364A12.181 12.181 0 0 1 64 22.455Z" fill="#84C44F"></path></svg>
+                                         eSewa
+                                     </Label>
+                                </div>
+                                 <div className="flex items-center space-x-3 p-3 border rounded-md hover:bg-secondary/50 transition-colors">
+                                    <RadioGroupItem value="khalti" id="khalti" />
+                                    {/* Placeholder SVG for Khalti */}
+                                    <Label htmlFor="khalti" className="flex items-center gap-2 cursor-pointer flex-grow">
+                                         <svg width="20" height="20" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M78.678 83.61 55.433 109.51c-1.284 1.403-3.226 2.302-5.333 2.418-2.106.116-4.146-.63-5.682-2.07L29.376 96.99a6.88 6.88 0 0 1-.217-9.683L64.895 50.49c1.284-1.403 3.226-2.302 5.333-2.418 2.106-.116 4.146.63 5.682 2.07l15.042 12.868a6.88 6.88 0 0 1 .217 9.683Z" fill="#5D2E8E"></path><path d="m104.57 50.49-35.736 36.817a6.88 6.88 0 0 0-.217 9.683l15.042 12.868c1.536 1.44 3.576 2.185 5.682 2.07 2.107-.116 4.049-1.015 5.333-2.418l23.245-25.9c1.284-1.403 1.945-3.215 1.788-5.045-.158-1.83-.994-3.538-2.31-4.824L104.57 50.49Z" fill="#FFF" fill-opacity=".9"></path></svg>
+                                         Khalti
+                                    </Label>
+                                </div>
+                                 <div className="flex items-center space-x-3 p-3 border rounded-md hover:bg-secondary/50 transition-colors">
+                                    <RadioGroupItem value="bank" id="bank" />
+                                    <Label htmlFor="bank" className="flex items-center gap-2 cursor-pointer flex-grow">
+                                        <Landmark className="h-5 w-5 text-blue-600" /> Bank Transfer
+                                    </Label>
+                                </div>
+                            </RadioGroup>
+                            {/* Remove the Change Payment Method button as selection is done via radio */}
+                            {/* <Button variant="outline" size="sm" className="mt-4">Change Payment Method</Button> */}
                         </CardContent>
                     </Card>
                 </div>
