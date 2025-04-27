@@ -11,8 +11,8 @@ export const mockProducts: Product[] = [
     name: 'Organic Apples',
     description: 'Fresh and juicy organic apples, perfect for snacking.',
     price: 2.50,
-    // Using a different placeholder image seed for variety
-    imageUrl: 'https://picsum.photos/seed/updated_apples/400/300', // Changed seed
+    // Replacing placeholder with user provided image URL
+    imageUrl: 'https://www.coca-cola.com/content/dam/onexp/us/en/brands/coca-cola-original/en_coca-cola_mobilebanner_original%20taste_654x1164_v1.jpg/width1338.jpg',
     category: 'Groceries',
     stock: 100,
   },
