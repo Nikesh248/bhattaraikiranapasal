@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/dialog"; // Import Dialog components
 import { CreditCard, MapPin, AlertCircle, Banknote, Landmark } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
+import Link from 'next/link'; // Import Link
+import { sendOrderConfirmationEmail } from '@/ai/flows/send-order-confirmation-email'; // Import the email sending flow
 
 interface AddressFormData {
     name: string;
@@ -44,10 +46,11 @@ export default function CheckoutPage() {
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash'); // State for payment method
     const [isClient, setIsClient] = useState(false);
     const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false); // State for address dialog
+    const [isLoading, setIsLoading] = useState(false); // Add loading state for place order
 
     // Mock address - replace with actual user address logic later
     const [currentAddress, setCurrentAddress] = useState({
-        name: user?.name || "Loading...",
+        name: "Loading...",
         address: "123 Pasal St",
         city: "Kathmandu",
         province: "Bagmati",
@@ -94,32 +97,75 @@ export default function CheckoutPage() {
         }
         // Update currentAddress when user loads
          if (user) {
-            setCurrentAddress(prev => ({ ...prev, name: user.name }));
+            setCurrentAddress(prev => ({
+                ...prev,
+                name: user.name,
+                // You might want to fetch saved address here if available
+                // For now, just update the name based on logged-in user
+            }));
             setAddressFormData(prev => ({ ...prev, name: user.name }));
+         } else if (isAuthenticated) {
+            // Handle case where user data might still be loading or missing
+             setCurrentAddress(prev => ({ ...prev, name: "User" })); // Default name if user object not fully loaded
+             setAddressFormData(prev => ({ ...prev, name: "User" }));
          }
 
     }, [isAuthenticated, items, router, toast, user]);
 
-    const handlePlaceOrder = () => {
-        // Simulate placing the order
-        console.log("Placing order for user:", user?.email, "Items:", items, "Payment Method:", selectedPaymentMethod, "Shipping Address:", currentAddress);
-        // TODO: Implement actual order placement logic (API call, payment integration, etc.)
+    const subtotal = getTotalPrice();
+    const totalItems = getTotalItems();
+    const finalTotal = subtotal + shippingCost; // Calculate final total
 
-        // Clear the cart after placing the order
-        clearCart();
+    const handlePlaceOrder = async () => {
+        setIsLoading(true);
+        try {
+            // Simulate placing the order
+            console.log("Placing order for user:", user?.email, "Items:", items, "Payment Method:", selectedPaymentMethod, "Shipping Address:", currentAddress, "Total:", finalTotal);
 
-        // Show success toast
-        toast({
-             title: "Order Placed!",
-             description: `Thank you for your purchase using ${selectedPaymentMethod}. Redirecting to home...`
+            // Send order confirmation email
+            await sendOrderConfirmationEmail({
+              recipientEmail: "nikeshdon66@gmail.com", // Hardcoded recipient
+              userName: user?.name || 'Customer',
+              userEmail: user?.email || 'N/A',
+              orderItems: items.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+              subtotal: subtotal,
+              shippingCost: shippingCost,
+              totalAmount: finalTotal,
+              paymentMethod: selectedPaymentMethod,
+              shippingAddress: currentAddress,
             });
 
-        // Redirect to an order confirmation page (or show a success message)
-        // For now, redirect to home after a short delay
-        setTimeout(() => {
-            router.push('/');
-        }, 1500); // Delay redirect slightly to allow toast visibility
+            // Clear the cart after placing the order
+            clearCart();
+
+            // Show success toast
+            toast({
+                title: "Order Placed!",
+                description: `Thank you for your purchase! Confirmation sent. Redirecting...`,
+                duration: 3000, // Give more time to read
+            });
+
+            // Redirect to home page after a short delay
+            setTimeout(() => {
+                router.push('/');
+            }, 1500); // Delay redirect slightly to allow toast visibility
+
+        } catch (error) {
+             console.error("Error placing order or sending email:", error);
+             toast({
+               variant: "destructive",
+               title: "Order Failed",
+               description: "There was an issue placing your order. Please try again.",
+             });
+             setIsLoading(false); // Ensure loading state is turned off on error
+        }
+        // No finally block needed for setIsLoading(false) as it's handled on success redirect or explicit error catch
     };
+
 
     const handleAddressFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -175,10 +221,6 @@ export default function CheckoutPage() {
       }
 
 
-    const subtotal = getTotalPrice();
-    const totalItems = getTotalItems();
-    const finalTotal = subtotal + shippingCost; // Calculate final total
-
     return (
         <div className="container mx-auto py-8">
             <h1 className="text-3xl font-bold mb-6">Checkout</h1>
@@ -195,9 +237,15 @@ export default function CheckoutPage() {
                 {/* Shipping & Payment Details */}
                 <div className="md:col-span-2 space-y-6">
                     <Card>
-                        <CardHeader className="flex flex-row items-center space-x-2">
-                             <MapPin className="h-5 w-5 text-primary" />
-                            <CardTitle>Shipping Address</CardTitle>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                             <div className="flex items-center space-x-2">
+                                 <MapPin className="h-5 w-5 text-primary" />
+                                 <CardTitle>Shipping Address</CardTitle>
+                             </div>
+                              {/* Link to Sign Up Page */}
+                             <Link href="/signup" passHref legacyBehavior>
+                               <Button variant="outline" size="sm" as="a">Change Address</Button>
+                             </Link>
                         </CardHeader>
                         <CardContent>
                              {isClient ? (
@@ -211,52 +259,6 @@ export default function CheckoutPage() {
                             ) : (
                                 <Skeleton className="h-16 w-1/2" />
                             )}
-                           {/* Address Change Dialog */}
-                           <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
-                             <DialogTrigger asChild>
-                               <Button variant="outline" size="sm" className="mt-4">Change Address</Button>
-                             </DialogTrigger>
-                             <DialogContent className="sm:max-w-[425px]">
-                               <DialogHeader>
-                                 <DialogTitle>Edit Shipping Address</DialogTitle>
-                                 <DialogDescription>
-                                   Update your shipping details here. Click save when you're done.
-                                 </DialogDescription>
-                               </DialogHeader>
-                               <div className="grid gap-4 py-4">
-                                 <div className="grid grid-cols-4 items-center gap-4">
-                                   <Label htmlFor="name" className="text-right">Name</Label>
-                                   <Input id="name" name="name" value={addressFormData.name} onChange={handleAddressFormChange} className="col-span-3" />
-                                 </div>
-                                 <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="address" className="text-right">Address</Label>
-                                    <Input id="address" name="address" value={addressFormData.address} onChange={handleAddressFormChange} className="col-span-3" />
-                                  </div>
-                                  <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="city" className="text-right">City</Label>
-                                    <Input id="city" name="city" value={addressFormData.city} onChange={handleAddressFormChange} className="col-span-3" />
-                                  </div>
-                                  <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="province" className="text-right">Province</Label>
-                                    <Input id="province" name="province" value={addressFormData.province} onChange={handleAddressFormChange} className="col-span-3" />
-                                  </div>
-                                  <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="postalCode" className="text-right">Postal Code</Label>
-                                    <Input id="postalCode" name="postalCode" value={addressFormData.postalCode} onChange={handleAddressFormChange} className="col-span-3" />
-                                  </div>
-                                   <div className="grid grid-cols-4 items-center gap-4">
-                                     <Label htmlFor="phoneNumber" className="text-right">Phone</Label>
-                                     <Input id="phoneNumber" name="phoneNumber" value={addressFormData.phoneNumber} onChange={handleAddressFormChange} className="col-span-3" />
-                                    </div>
-                               </div>
-                               <DialogFooter>
-                                 <DialogClose asChild>
-                                     <Button type="button" variant="secondary">Cancel</Button>
-                                  </DialogClose>
-                                 <Button type="button" onClick={handleSaveAddress}>Save Address</Button>
-                               </DialogFooter>
-                             </DialogContent>
-                           </Dialog>
                         </CardContent>
                     </Card>
 
@@ -346,8 +348,8 @@ export default function CheckoutPage() {
                                 )}
                         </CardContent>
                         <CardFooter>
-                            <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handlePlaceOrder} disabled={!isClient || items.length === 0}>
-                                {isClient && items.length > 0 ? 'Place Order' : 'Loading...'}
+                            <Button size="lg" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" onClick={handlePlaceOrder} disabled={!isClient || items.length === 0 || isLoading}>
+                                {isLoading ? 'Placing Order...' : (isClient && items.length > 0 ? 'Place Order' : 'Loading...')}
                             </Button>
                         </CardFooter>
                     </Card>
