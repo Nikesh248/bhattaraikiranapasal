@@ -1,3 +1,4 @@
+
 import type { Product } from '@/types';
 
 export const mockProducts: Product[] = [
@@ -6,7 +7,7 @@ export const mockProducts: Product[] = [
     name: 'Organic Apples',
     description: 'Fresh and juicy organic apples, perfect for snacking.',
     price: 2.50,
-    imageUrl: 'https://picsum.photos/seed/apples/400/300',
+    imageUrl: 'https://picsum.photos/seed/new_apples/400/300', // Updated image URL
     category: 'Groceries',
     stock: 100,
   },
