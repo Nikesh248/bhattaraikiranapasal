@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react'; // Import icon
+import { sendPasswordResetRequestEmail } from '@/ai/flows/send-password-reset-request-email'; // Import the new flow
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -52,15 +53,25 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsLoading(true);
     try {
-      // Simulate API call to backend to initiate password reset
-      console.log('Password reset requested for:', data.email);
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network delay
+      // Simulate backend interaction (or real interaction if implemented)
+      console.log('Password reset requested for customer:', data.email);
 
-      // In a real app, the backend would send an email with a reset link/code.
-      // Here, we just show a success message.
+      // Send notification email to admin using the Genkit flow
+      const emailResult = await sendPasswordResetRequestEmail({
+        customerEmail: data.email,
+      });
+
+      if (!emailResult.success) {
+        // Log the error but still proceed with the user-facing confirmation
+        console.error('Failed to send admin notification email:', emailResult.message);
+      }
+
+      // In a real app, the backend would ideally handle sending the *actual* reset email to the customer.
+      // Here, we proceed as if the process was initiated successfully.
+
       toast({
-        title: 'Password Reset Email Sent',
-        description: 'If an account exists for this email, you will receive instructions to reset your password shortly.',
+        title: 'Password Reset Request Received',
+        description: 'If an account exists for this email, instructions may be sent. Please contact support if you have issues.',
       });
       setIsSubmitted(true); // Show success message instead of form
 
@@ -83,7 +94,7 @@ export default function ForgotPasswordPage() {
           <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
            {!isSubmitted && (
              <CardDescription>
-                Enter your email address and we'll send you instructions to reset your password.
+                Enter your email address to request a password reset.
              </CardDescription>
             )}
         </CardHeader>
@@ -91,7 +102,7 @@ export default function ForgotPasswordPage() {
           {isSubmitted ? (
               <div className="text-center space-y-4">
                  <p className="text-muted-foreground">
-                    Password reset instructions have been sent to your email address. Please check your inbox (and spam folder).
+                    Your password reset request has been received. If your email is associated with an account, further instructions may follow. Please check your inbox (and spam folder) or contact support.
                  </p>
                  <Button onClick={() => router.push('/login')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                     Back to Login
