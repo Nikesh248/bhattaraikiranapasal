@@ -30,14 +30,16 @@ import {
 import { useAuthStore } from '@/hooks/use-auth'; // Consider a separate admin auth hook/store
 import { useToast } from '@/hooks/use-toast';
 
-// Note: Add any admin-specific fields if needed (e.g., invitation code)
+// Hardcoded secret key - **IN A REAL APP, USE AN ENVIRONMENT VARIABLE**
+const ADMIN_SECRET_KEY = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY || "PASAL_SECRET_KEY"; // Use env variable or fallback
+
+// Add adminSecretKey field to the schema
 const adminSignupSchema = z.object({
   fullName: z.string().min(2, { message: 'Full name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Invalid email address.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
-  // Add admin-specific fields here, e.g.,
-  // adminCode: z.string().min(6, { message: 'Admin code is required.' }),
+  adminSecretKey: z.string().min(1, { message: 'Admin secret key is required.' }), // Add secret key field
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'], // path of error
@@ -59,21 +61,23 @@ export default function AdminSignupPage() {
       email: '',
       password: '',
       confirmPassword: '',
-      // adminCode: '', // Default for admin-specific fields
+      adminSecretKey: '', // Default for secret key
     },
   });
 
   const onSubmit = async (data: AdminSignupFormValues) => {
     setIsLoading(true);
     try {
+      // --- SECRET KEY VALIDATION ---
+      if (data.adminSecretKey !== ADMIN_SECRET_KEY) {
+        throw new Error('Invalid Admin Secret Key.');
+      }
+
       // Simulate API call for admin signup
-      // In a real app, you'd verify the adminCode and create the admin account via backend API
-      console.log('Admin Signup Data:', data); // Log data for debugging
+      console.log('Admin Signup Data (Validated):', { ...data, adminSecretKey: '***REDACTED***' }); // Log data for debugging, hide key
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Mock: Assume signup is successful if fields are filled (add real verification!)
-      // For example, check if the adminCode is valid before proceeding
-
+      // Mock: Assume signup is successful if fields are filled and key is valid
       signup({ // This should ideally be an admin-specific signup/login function
         id: 'admin_' + Date.now(), // Mock admin ID
         name: data.fullName,
@@ -102,7 +106,7 @@ export default function AdminSignupPage() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Create Admin Account</CardTitle>
-          <CardDescription>Enter details to create an admin account</CardDescription>
+          <CardDescription>Enter details and the secret key to create an admin account</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -159,20 +163,21 @@ export default function AdminSignupPage() {
                   </FormItem>
                 )}
               />
-              {/* Add admin-specific fields here, e.g., Admin Code */}
-              {/* <FormField
+              {/* Add Admin Secret Key field */}
+              <FormField
                 control={form.control}
-                name="adminCode"
+                name="adminSecretKey"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Admin Code</FormLabel>
+                    <FormLabel>Admin Secret Key</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter admin code" {...field} disabled={isLoading} />
+                      {/* Use password type to obscure the key */}
+                      <Input type="password" placeholder="Enter the secret key" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
-              /> */}
+              />
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
                 {isLoading ? 'Creating Account...' : 'Create Admin Account'}
               </Button>
