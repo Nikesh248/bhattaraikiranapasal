@@ -27,58 +27,65 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+// Note: We might need a separate auth store or method for admin login in a real app
+// For now, we'll reuse the user auth store for simplicity, but this should be different.
+// import { useAdminAuthStore } from '@/hooks/use-admin-auth'; // Example for a separate store
 import { useAuthStore } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
-const loginSchema = z.object({
+const adminLoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  // Replace with admin-specific login logic if needed
+  const { login } = useAuthStore(); // Using user login for now
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<AdminLoginFormValues>({
+    resolver: zodResolver(adminLoginSchema),
     defaultValues: {
       email: '',
       password: '',
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (data: AdminLoginFormValues) => {
     setIsLoading(true);
     try {
-      // Simulate API call
+      // Simulate API call for admin verification
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // In a real app, you'd verify credentials against a backend
-      // For this mock, we assume login is successful if email contains '@'
-      // You should replace this with actual backend authentication logic
-      // Check if the email exists and the password matches a hash in your database
-      if (data.email.includes('@') && data.password.length >= 6) { // Basic mock validation
+      // --- IMPORTANT ---
+      // In a real application, you MUST verify admin credentials against a secure backend endpoint.
+      // This mock logic is insecure and only for demonstration.
+      // Example check (highly insecure, replace with backend verification):
+      if (data.email === 'admin@pasal.com' && data.password === 'admin123') {
+        // Use a dedicated admin login function if available
         login({
-          id: 'user_' + Date.now(), // Mock user ID
-          name: data.email.split('@')[0], // Mock name from email
+          id: 'admin_' + Date.now(), // Mock admin ID
+          name: 'Admin User', // Mock admin name
           email: data.email,
+          // Add admin-specific roles or flags here if needed
         });
         toast({
-          title: 'Login Successful',
-          description: 'Welcome back!',
+          title: 'Admin Login Successful',
+          description: 'Welcome, Admin!',
         });
-        router.push('/'); // Redirect to home page after login
+        // Redirect to an admin dashboard or a specific admin area
+        router.push('/admin/dashboard'); // TODO: Create admin dashboard page
       } else {
-        throw new Error('Invalid credentials');
+        throw new Error('Invalid admin credentials');
       }
     } catch (error) {
       toast({
         variant: 'destructive',
-        title: 'Login Failed',
+        title: 'Admin Login Failed',
         description: error instanceof Error ? error.message : 'An unexpected error occurred.',
       });
     } finally {
@@ -90,8 +97,8 @@ export default function LoginPage() {
     <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Login to Bhattarai Kirana Pasal</CardTitle>
-          <CardDescription>Enter your email and password below</CardDescription>
+          <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
+          <CardDescription>Enter your admin credentials below</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -103,7 +110,7 @@ export default function LoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="you@example.com" {...field} disabled={isLoading} />
+                      <Input placeholder="admin@example.com" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -114,12 +121,7 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex justify-between items-center">
-                      <FormLabel>Password</FormLabel>
-                      <Link href="#" className="text-sm text-primary hover:underline">
-                        Forgot password?
-                      </Link>
-                    </div>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
                       <Input type="password" placeholder="******" {...field} disabled={isLoading} />
                     </FormControl>
@@ -127,27 +129,20 @@ export default function LoginPage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoading}>
-                {isLoading ? 'Logging in...' : 'Login'}
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
+                {isLoading ? 'Logging in...' : 'Admin Login'}
               </Button>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col items-center space-y-2">
-           <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/signup" className="font-medium text-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
-            {/* Add Admin/Shop Owner link */}
+         <CardFooter className="flex flex-col items-center space-y-2">
             <p className="text-sm text-muted-foreground">
-               Are you the shop owner?{' '}
-               <Link href="/admin-login" className="font-medium text-primary hover:underline">
-                 Admin Login
+               Not an admin?{' '}
+               <Link href="/login" className="font-medium text-primary hover:underline">
+                 Customer Login
                </Link>
-            </p>
-        </CardFooter>
+             </p>
+         </CardFooter>
       </Card>
     </div>
   );
