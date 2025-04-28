@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Label is used via FormLabel
 import {
   Form,
   FormControl,
@@ -74,8 +74,8 @@ export default function ForgotPasswordPage() {
       });
       setIsSubmitted(true); // Show success message
 
-      // In a real app, you would likely redirect to an OTP verification page here
-      // router.push(`/verify-otp?identifier=${encodeURIComponent(data.identifier)}`);
+      // Redirect to OTP verification page, passing the identifier
+      router.push(`/verify-otp?identifier=${encodeURIComponent(data.identifier)}`);
 
     } catch (error) {
       console.error('Forgot password error:', error);
@@ -104,31 +104,32 @@ export default function ForgotPasswordPage() {
           {isSubmitted ? (
               <div className="text-center space-y-4">
                  <p className="text-muted-foreground">
-                    An OTP has been sent to your registered email or phone number. Please check your messages.
-                    {/* TODO: Add a form here to input OTP and new password */}
+                    An OTP has been sent to your registered email or phone number. Please check your messages and proceed to verify.
                  </p>
-                 <Button onClick={() => router.push('/login')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                 {/* Button to go back is less necessary now as we redirect */}
+                 {/* <Button onClick={() => router.push('/login')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                     Back to Login
-                 </Button>
+                 </Button> */}
               </div>
             ) : (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="identifier" // Changed name from email to identifier
+                  name="identifier"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email or Phone Number</FormLabel> {/* Updated Label */}
+                      <FormLabel>Email or Phone Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="you@example.com or 98XXXXXXXX" {...field} disabled={isLoading} /> {/* Updated placeholder */}
+                         {/* Ensure Input is the single direct child of FormControl */}
+                        <Input placeholder="you@example.com or 98XXXXXXXX" {...field} disabled={isLoading} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoading}>
-                  {isLoading ? 'Sending OTP...' : 'Send OTP'} {/* Updated button text */}
+                  {isLoading ? 'Sending OTP...' : 'Send OTP'}
                 </Button>
               </form>
             </Form>

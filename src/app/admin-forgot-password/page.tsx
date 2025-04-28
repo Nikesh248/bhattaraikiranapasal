@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Label is used via FormLabel
 import {
   Form,
   FormControl,
@@ -56,6 +56,13 @@ export default function AdminForgotPasswordPage() {
       // Simulate API call to backend to initiate admin password reset OTP
       console.log('Admin password reset OTP requested for:', data.identifier);
       // Replace with actual API call to /send-otp or similar endpoint
+      // Example:
+      // const response = await fetch('/api/admin/send-otp', {
+      //    method: 'POST',
+      //    headers: { 'Content-Type': 'application/json' },
+      //    body: JSON.stringify({ identifier: data.identifier }),
+      // });
+      // if (!response.ok) throw new Error('Failed to send OTP');
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network delay
 
       // In a real app, the backend would send an OTP to the admin's registered contact.
@@ -64,6 +71,9 @@ export default function AdminForgotPasswordPage() {
         description: 'If an admin account exists for this identifier, you will receive an OTP shortly.',
       });
       setIsSubmitted(true); // Show success message instead of form
+      // Redirect to OTP verification page, passing the identifier
+      router.push(`/admin-verify-otp?identifier=${encodeURIComponent(data.identifier)}`);
+
 
     } catch (error) {
       console.error('Admin forgot password error:', error);
@@ -92,31 +102,32 @@ export default function AdminForgotPasswordPage() {
           {isSubmitted ? (
               <div className="text-center space-y-4">
                  <p className="text-muted-foreground">
-                    An OTP has been sent to the admin contact information. Please check messages/email.
-                    {/* TODO: Add form for OTP and new password */}
+                    An OTP has been sent to the admin contact information. Please check messages/email and proceed to verify.
                  </p>
-                 <Button onClick={() => router.push('/admin-login')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                 {/* Button to go back is less necessary now as we redirect */}
+                 {/* <Button onClick={() => router.push('/admin-login')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                     Back to Admin Login
-                 </Button>
+                 </Button> */}
               </div>
             ) : (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
-                  name="identifier" // Changed name
+                  name="identifier"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Admin Email or Phone Number</FormLabel> {/* Updated Label */}
+                      <FormLabel>Admin Email or Phone Number</FormLabel>
                       <FormControl>
-                        <Input placeholder="admin@example.com or 98XXXXXXXX" {...field} disabled={isLoading} /> {/* Updated placeholder */}
+                        {/* Ensure Input is the single direct child of FormControl */}
+                        <Input placeholder="admin@example.com or 98XXXXXXXX" {...field} disabled={isLoading} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoading}>
-                  {isLoading ? 'Sending OTP...' : 'Send OTP'} {/* Updated button text */}
+                  {isLoading ? 'Sending OTP...' : 'Send OTP'}
                 </Button>
               </form>
             </Form>
