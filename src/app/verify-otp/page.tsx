@@ -89,7 +89,7 @@ function VerifyOtpContent() {
       await new Promise((resolve, reject) => {
           setTimeout(() => {
               // Simulate success/failure (e.g., based on OTP value)
-              if (data.otp === '123456') { // Mock success OTP
+              if (data.otp === '245678') { // Updated mock success OTP
                  resolve(true);
               } else {
                  reject(new Error('Invalid or expired OTP.'));

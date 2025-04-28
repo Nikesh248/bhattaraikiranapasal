@@ -87,7 +87,7 @@ function AdminVerifyOtpContent() {
       await new Promise((resolve, reject) => {
           setTimeout(() => {
               // Simulate success/failure (e.g., based on OTP value)
-              if (data.otp === '654321') { // Mock success OTP for admin
+              if (data.otp === '245678') { // Updated mock success OTP for admin
                  resolve(true);
               } else {
                  reject(new Error('Invalid or expired admin OTP.'));
@@ -209,4 +209,3 @@ export default function AdminVerifyOtpPage() {
     </Suspense>
   );
 }
-
