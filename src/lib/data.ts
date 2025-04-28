@@ -11,7 +11,6 @@ export const mockProducts: Product[] = [
     name: 'Organic Apples',
     description: 'Fresh and juicy organic apples, perfect for snacking.',
     price: 2.50,
-    // Replacing placeholder with user provided image URL
     imageUrl: 'https://www.coca-cola.com/content/dam/onexp/us/en/brands/coca-cola-original/en_coca-cola_mobilebanner_original%20taste_654x1164_v1.jpg/width1338.jpg',
     category: 'Groceries',
     stock: 100,
@@ -27,11 +26,10 @@ export const mockProducts: Product[] = [
   },
   {
     id: 'prod_003',
-    name: 'Coca-Cola', // Changed name to match image request
-    description: 'Refreshing Coca-Cola soft drink.', // Changed description
-    price: 1.50, // Adjusted price
-    // Using the placeholder image intended for Coca-Cola
-    imageUrl: 'https://picsum.photos/seed/coca_cola/400/300',
+    name: 'Coca-Cola',
+    description: 'Refreshing Coca-Cola soft drink.',
+    price: 1.50,
+    imageUrl: 'https://www.coca-cola.com/content/dam/onexp/us/en/brands/coca-cola-original/en_coca-cola_mobilebanner_original%20taste_654x1164_v1.jpg/width1338.jpg',
     category: 'Groceries',
     stock: 150,
   },
@@ -58,7 +56,7 @@ export const mockProducts: Product[] = [
     name: 'Running Shoes',
     description: 'Lightweight and supportive running shoes for men and women.',
     price: 79.99,
-    imageUrl: 'https://picsum.photos/seed/pasal_shoes/400/300', // Changed seed back to original request
+    imageUrl: 'https://www.coca-cola.com/content/dam/onexp/us/en/brands/coca-cola-original/en_coca-cola_mobilebanner_original%20taste_654x1164_v1.jpg/width1338.jpg',
     category: 'Fashion',
     stock: 75,
   },
@@ -100,17 +98,23 @@ export const mockProducts: Product[] = [
   },
 ];
 
-export const getProductById = (id: string): Product | undefined => {
+// Simulate async data fetching (e.g., from an API or database)
+export const getProductById = async (id: string): Promise<Product | undefined> => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay
   return mockProducts.find(p => p.id === id);
 };
 
-export const getProductsByCategory = (category: string): Product[] => {
-  // Ensure case-insensitive comparison for category filtering
+export const getProductsByCategory = async (category: string): Promise<Product[]> => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
   const lowerCaseCategory = category.toLowerCase();
   return mockProducts.filter(p => p.category.toLowerCase() === lowerCaseCategory);
 };
 
-export const searchProducts = (query: string): Product[] => {
+export const searchProducts = async (query: string): Promise<Product[]> => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 80)); // 80ms delay
   if (!query) return mockProducts; // Return all if query is empty
   const lowerCaseQuery = query.toLowerCase();
   return mockProducts.filter(
@@ -121,7 +125,23 @@ export const searchProducts = (query: string): Product[] => {
   );
 };
 
+// This can remain synchronous if categories are derived from static data
 export const getCategories = (): string[] => {
     const categories = new Set(mockProducts.map(p => p.category));
     return Array.from(categories);
+};
+
+// Function to get all products (can be async)
+export const getAllProducts = async (): Promise<Product[]> => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 120)); // 120ms delay
+  return mockProducts;
+};
+
+// Function to get featured products (can be async)
+export const getFeaturedProducts = async (limit: number = 6): Promise<Product[]> => {
+    // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 70)); // 70ms delay
+    // Simple logic: return first 'limit' products, add more sophisticated logic later
+    return mockProducts.slice(0, limit);
 };
