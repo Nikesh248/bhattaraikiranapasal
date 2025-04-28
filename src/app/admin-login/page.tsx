@@ -65,7 +65,7 @@ export default function AdminLoginPage() {
       // In a real application, you MUST verify admin credentials against a secure backend endpoint.
       // This mock logic is insecure and only for demonstration.
       // Example check (highly insecure, replace with backend verification):
-      if (data.email === 'admin@pasal.com' && data.password === 'admin123') {
+      if (data.email === 'admin@pasal.com' && data.password === 'admin123') { // Updated credentials
         // Use a dedicated admin login function if available
         login({
           id: 'admin_' + Date.now(), // Mock admin ID
@@ -110,7 +110,7 @@ export default function AdminLoginPage() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="admin@example.com" {...field} disabled={isLoading} />
+                      <Input placeholder="admin@pasal.com" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
