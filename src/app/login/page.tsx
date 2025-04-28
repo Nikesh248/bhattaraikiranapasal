@@ -138,6 +138,13 @@ export default function LoginPage() {
                 Sign up
               </Link>
             </p>
+            {/* Add Admin/Shop Owner link */}
+            <p className="text-sm text-muted-foreground">
+               Are you the shop owner?{' '}
+               <Link href="/admin-login" className="font-medium text-primary hover:underline">
+                 Admin Login
+               </Link>
+            </p>
         </CardFooter>
       </Card>
     </div>
