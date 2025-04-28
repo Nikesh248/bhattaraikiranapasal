@@ -116,7 +116,8 @@ export default function LoginPage() {
                   <FormItem>
                     <div className="flex justify-between items-center">
                       <FormLabel>Password</FormLabel>
-                      <Link href="#" className="text-sm text-primary hover:underline">
+                      {/* Add Forgot Password link here */}
+                      <Link href="/forgot-password" className="text-sm text-primary hover:underline">
                         Forgot password?
                       </Link>
                     </div>
