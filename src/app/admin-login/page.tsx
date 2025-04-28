@@ -137,11 +137,17 @@ export default function AdminLoginPage() {
         </CardContent>
          <CardFooter className="flex flex-col items-center space-y-2">
             <p className="text-sm text-muted-foreground">
-               Not an admin?{' '}
-               <Link href="/login" className="font-medium text-primary hover:underline">
-                 Customer Login
+               Need an admin account?{' '}
+               <Link href="/admin-signup" className="font-medium text-primary hover:underline">
+                 Admin Sign Up
                </Link>
              </p>
+             <p className="text-sm text-muted-foreground">
+                Not an admin?{' '}
+                <Link href="/login" className="font-medium text-primary hover:underline">
+                  Customer Login
+                </Link>
+              </p>
          </CardFooter>
       </Card>
     </div>
