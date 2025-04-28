@@ -29,9 +29,8 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
-// Removed unused import: import { sendPasswordResetRequestEmail } from '@/ai/flows/send-password-reset-request-email';
 
-// Schema to accept email or phone number
+// Update schema to accept a non-empty string for email or phone
 const forgotPasswordSchema = z.object({
   identifier: z.string().min(1, { message: 'Please enter your email or phone number.' }),
 });
@@ -42,7 +41,7 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  // Removed isSubmitted state as we now redirect
+  const [isSubmitted, setIsSubmitted] = useState(false); // State to show success message
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -54,31 +53,40 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormValues) => {
     setIsLoading(true);
     try {
-      // Simulate backend interaction to send OTP
-      console.log('OTP requested for identifier:', data.identifier);
+      // Simulate backend interaction: Call /send-otp endpoint
+      console.log('Requesting OTP for identifier:', data.identifier);
+      // Replace with actual API call
+      // const response = await fetch('/api/send-otp', { // Example API endpoint
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ identifier: data.identifier }),
+      // });
+      // if (!response.ok) {
+      //   throw new Error('Failed to send OTP');
+      // }
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate network delay
 
-      // TODO: Replace with actual API call to /send-otp endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      // Remove the call to sendPasswordResetRequestEmail
 
-      // Assume OTP sending was successful
       toast({
         title: 'OTP Sent',
-        description: `An OTP has been sent to ${data.identifier}. Please check your messages/email.`,
+        description: 'If an account exists for this identifier, an OTP has been sent.',
       });
+      setIsSubmitted(true); // Show success message
 
-      // Redirect to the OTP verification page, passing the identifier
-      router.push(`/verify-otp?identifier=${encodeURIComponent(data.identifier)}`);
+      // In a real app, you would likely redirect to an OTP verification page here
+      // router.push(`/verify-otp?identifier=${encodeURIComponent(data.identifier)}`);
 
     } catch (error) {
       console.error('Forgot password error:', error);
       toast({
         variant: 'destructive',
         title: 'Request Failed',
-        description: 'Could not send OTP. Please try again.',
+        description: 'Could not process your request. Please try again.',
       });
-      setIsLoading(false); // Keep loading false on error
+    } finally {
+      setIsLoading(false);
     }
-    // No need to set isLoading to false here if redirecting on success
   };
 
   return (
@@ -86,40 +94,55 @@ export default function ForgotPasswordPage() {
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
-          <CardDescription>
-            Enter your email or phone number to receive an OTP.
-          </CardDescription>
+           {!isSubmitted && (
+             <CardDescription>
+                Enter your email or phone number to receive an OTP.
+             </CardDescription>
+            )}
         </CardHeader>
         <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="identifier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email or Phone Number</FormLabel>
-                    <FormControl>
-                      {/* Changed placeholder */}
-                      <Input placeholder="you@example.com or 98XXXXXXXX" {...field} disabled={isLoading} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoading}>
-                {isLoading ? 'Sending OTP...' : 'Send OTP'}
-              </Button>
-            </form>
-          </Form>
+          {isSubmitted ? (
+              <div className="text-center space-y-4">
+                 <p className="text-muted-foreground">
+                    An OTP has been sent to your registered email or phone number. Please check your messages.
+                    {/* TODO: Add a form here to input OTP and new password */}
+                 </p>
+                 <Button onClick={() => router.push('/login')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                    Back to Login
+                 </Button>
+              </div>
+            ) : (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="identifier" // Changed name from email to identifier
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email or Phone Number</FormLabel> {/* Updated Label */}
+                      <FormControl>
+                        <Input placeholder="you@example.com or 98XXXXXXXX" {...field} disabled={isLoading} /> {/* Updated placeholder */}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground" disabled={isLoading}>
+                  {isLoading ? 'Sending OTP...' : 'Send OTP'} {/* Updated button text */}
+                </Button>
+              </form>
+            </Form>
+          )}
         </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button variant="link" asChild className="text-sm text-muted-foreground">
-            <Link href="/login">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Back to Login
-            </Link>
-          </Button>
-        </CardFooter>
+         {!isSubmitted && ( // Only show footer if form is visible
+             <CardFooter className="flex justify-center">
+                 <Button variant="link" asChild className="text-sm text-muted-foreground">
+                     <Link href="/login">
+                        <ArrowLeft className="mr-1 h-4 w-4" /> Back to Login
+                     </Link>
+                 </Button>
+             </CardFooter>
+            )}
       </Card>
     </div>
   );
