@@ -31,7 +31,8 @@ import { useAuthStore } from '@/hooks/use-auth'; // Consider a separate admin au
 import { useToast } from '@/hooks/use-toast';
 
 // Hardcoded secret key - **IN A REAL APP, USE AN ENVIRONMENT VARIABLE**
-const ADMIN_SECRET_KEY = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY || "PASAL_SECRET_KEY"; // Use env variable or fallback
+// Set the admin secret key as requested by the user
+const ADMIN_SECRET_KEY = process.env.NEXT_PUBLIC_ADMIN_SECRET_KEY || "seller@seller"; // Use env variable or fallback to "seller@seller"
 
 // Add adminSecretKey field to the schema
 const adminSignupSchema = z.object({
