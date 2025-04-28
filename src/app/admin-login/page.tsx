@@ -121,7 +121,13 @@ export default function AdminLoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <div className="flex justify-between items-center">
+                       <FormLabel>Password</FormLabel>
+                       {/* Add Forgot Password link here */}
+                       <Link href="/admin-forgot-password" className="text-sm text-primary hover:underline">
+                         Forgot password?
+                       </Link>
+                    </div>
                     <FormControl>
                       <Input type="password" placeholder="******" {...field} disabled={isLoading} />
                     </FormControl>
