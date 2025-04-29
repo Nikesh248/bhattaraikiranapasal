@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -26,6 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+// Import the specific functions needed from the store
 import { useAuthStore } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -53,7 +55,11 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup } = useAuthStore();
+  // Get necessary functions from the store
+  const { signup, isIdentifierRegistered } = useAuthStore(state => ({
+      signup: state.signup,
+      isIdentifierRegistered: state.isIdentifierRegistered
+  }));
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -71,31 +77,57 @@ export default function SignupPage() {
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
     try {
+      // **Check for identifier uniqueness before simulating API call**
+      if (isIdentifierRegistered(data.identifier)) {
+        toast({
+          variant: 'destructive',
+          title: 'Signup Failed',
+          description: 'This email or phone number is already registered. Please log in or use a different identifier.',
+        });
+        setIsLoading(false);
+        return; // Stop submission if identifier exists
+      }
+
       // Simulate API call for signup
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // In a real app, you'd create the user account via backend API
-      // For this mock, we assume signup is successful
-      // Use identifier as email for mock signup - adapt if backend changes
-      signup({
-        id: 'user_' + Date.now(), // Mock user ID
-        name: data.fullName,
-        email: data.identifier, // Pass identifier here
-      });
-      toast({
-        title: 'Signup Successful',
-        description: 'Your account has been created.',
-      });
-      router.push('/'); // Redirect to home page after signup
+      // Call the updated signup function which handles setting the state
+      const signupSuccess = signup(
+        {
+          // Pass user data without ID
+          name: data.fullName,
+          email: data.identifier, // Use identifier as email for mock user object
+        },
+        data.identifier // Pass the actual identifier for uniqueness check and storage
+      );
+
+      if (signupSuccess) {
+        toast({
+          title: 'Signup Successful',
+          description: 'Your account has been created. Redirecting...',
+        });
+        router.push('/'); // Redirect to home page after signup
+      } else {
+         // This case should theoretically be caught by the initial check,
+         // but handle it just in case the store logic changes.
+          toast({
+             variant: 'destructive',
+             title: 'Signup Failed',
+             description: 'This email or phone number might already be registered.',
+           });
+          setIsLoading(false); // Ensure loading stops on failure
+      }
+
     } catch (error) {
+      // Catch unexpected errors
       toast({
         variant: 'destructive',
         title: 'Signup Failed',
         description: error instanceof Error ? error.message : 'An unexpected error occurred.',
       });
-    } finally {
-      setIsLoading(false);
+       setIsLoading(false); // Ensure loading stops on error
     }
+    // No finally block needed for setIsLoading(false) as it's handled in success/error paths
   };
 
   return (
