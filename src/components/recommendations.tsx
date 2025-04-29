@@ -52,7 +52,7 @@ export default function Recommendations() {
         // Check for errors returned by the server action
         if (!result.success || !result.output) {
             const errorMsg = result.error || "Failed to get recommendations.";
-             // Distinguish between "not configured" and "invalid key"
+             // Distinguish between "not configured" and "invalid key" based on the error message from the flow
              if (errorMsg.includes("AI service is not configured")) {
                  setAiAvailable(false);
              } else if (errorMsg.includes("Invalid API Key")) {
@@ -61,9 +61,9 @@ export default function Recommendations() {
                  setAiAvailable(true); // Assume available but another error occurred
              }
              // Set the error state instead of throwing
-             setRecommendationError(errorMsg);
+             setRecommendationError(errorMsg); // Use the detailed error message from the action
              setRecommendations([]);
-             console.error("Server action returned error:", errorMsg);
+             console.error("Server action returned error:", errorMsg); // Log the detailed error message
              // Don't throw here, let the component render the error state
         } else {
             // Success case
@@ -114,18 +114,19 @@ export default function Recommendations() {
 
   // Render error state or AI not configured/invalid key message
    if (aiAvailable === false) {
+     // Use the detailed error message stored in recommendationError
      const isInvalidKeyError = recommendationError?.includes("Invalid API Key");
      const isNotConfiguredError = recommendationError?.includes("AI service is not configured");
 
      let errorTitle = "Recommendation Error";
-     let errorDescription = recommendationError || "AI recommendations are currently unavailable.";
+     let errorDescription = recommendationError || "AI recommendations are currently unavailable."; // Fallback message
 
      if (isInvalidKeyError) {
         errorTitle = "Invalid AI API Key";
-        errorDescription = "The provided Google AI API Key is invalid. Please check your .env.local file and ensure GOOGLE_GENAI_API_KEY is set correctly. Get your key from Google AI Studio.";
+        // Description remains the detailed error message from state
      } else if (isNotConfiguredError) {
          errorTitle = "AI Service Not Configured";
-         errorDescription = "The AI recommendation service is not configured. Please add your GOOGLE_GENAI_API_KEY to the .env.local file in the project root. Get your key from Google AI Studio.";
+         // Description remains the detailed error message from state
      }
 
      return (
@@ -151,7 +152,7 @@ export default function Recommendations() {
              <AlertCircle className="h-4 w-4" />
              <AlertTitle>Recommendation Error</AlertTitle>
              <AlertDescription>
-                {recommendationError}
+                {recommendationError} {/* Display the detailed error message */}
               </AlertDescription>
            </Alert>
          </section>
@@ -170,7 +171,7 @@ export default function Recommendations() {
             Based on your activity, you might like these:
              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                {recommendations.map((product) => (
-                 <ProductCard key={product.id} product={product} />
+                 <ProductCard key={product.id} product={product} onRemove={() => { /* Handle remove in recommendation context if needed */ }} />
                ))}
             </div>
           </AlertDescription>

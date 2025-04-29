@@ -10,6 +10,7 @@
 
 import { ai, ensureAiIsConfigured, isAiConfigured } from '@/ai/ai-instance';
 import { z } from 'genkit';
+import { logger } from 'genkit/logging'; // Import Genkit logger
 
 const RecommendProductsInputSchema = z.object({
   searchHistory: z.array(z.string()).describe('The user\'s search history.'),
@@ -25,25 +26,42 @@ export type RecommendProductsOutput = z.infer<typeof RecommendProductsOutputSche
 
 // This internal function is called by the Server Action
 async function recommendProductsFlowInternal(input: RecommendProductsInput): Promise<RecommendProductsOutput> {
+    logger.info("recommendProductsFlowInternal started with input:", input); // Log input
     try {
         // Double-check AI config within the flow execution
-        // ensureAiIsConfigured(); // This check can be done in the action or here
-        const {output} = await prompt(input);
+        // ensureAiIsConfigured(); // This check is handled in the action layer
+
+        logger.debug("Calling recommendProductsPrompt...");
+        const {output, usage} = await prompt(input);
+        logger.debug("recommendProductsPrompt response received:", { output, usage }); // Log output and usage
+
         if (!output) {
+            logger.error("AI prompt did not return an output.");
             throw new Error("AI prompt did not return an output.");
         }
+        logger.info("recommendProductsFlowInternal completed successfully.");
         return output;
-    } catch (error) {
-        console.error('Error in recommendProductsFlowInternal:', error);
+    } catch (error: any) {
+        // Log the detailed error on the server
+        logger.error('Error in recommendProductsFlowInternal:', error);
+
         // Re-throw specific errors for the action layer to handle
-        if (error instanceof Error && /API key not valid/i.test(error.message)) {
-             throw new Error("Failed to get recommendations: Invalid API Key. Please check server configuration.");
+        if (error instanceof Error) {
+            if (/API key not valid/i.test(error.message)) {
+                 logger.warn("Invalid API Key detected in flow.");
+                 throw new Error("Failed to get recommendations: Invalid API Key. Please check server configuration.");
+            }
+             if (/AI features are not configured/i.test(error.message)) {
+                logger.warn("AI features not configured error caught in flow.");
+                throw new Error("Failed to get recommendations: AI service is not configured.");
+            }
+            // Include original error message for other cases
+            logger.error("Generic internal error in flow:", error.message);
+            throw new Error(`Failed to get recommendations due to an internal error: ${error.message}`);
         }
-         if (error instanceof Error && /AI features are not configured/i.test(error.message)) {
-            throw new Error("Failed to get recommendations: AI service is not configured.");
-        }
-        // Throw a more generic error for other issues
-        throw new Error("Failed to get recommendations due to an internal error.");
+        // Throw a more generic error for non-Error objects
+        logger.error("Unknown error type in flow:", error);
+        throw new Error("Failed to get recommendations due to an unknown internal error.");
     }
 }
 
@@ -53,6 +71,7 @@ async function recommendProductsFlowInternal(input: RecommendProductsInput): Pro
 export async function recommendProducts(input: RecommendProductsInput): Promise<RecommendProductsOutput> {
   // We ensure AI is configured in the action that calls this.
   // If called directly elsewhere, the caller should check isAiConfigured.
+  logger.info("recommendProducts action handler called.");
   return recommendProductsFlow(input);
 }
 
@@ -111,3 +130,4 @@ const recommendProductsFlow = ai.defineFlow<
   },
   recommendProductsFlowInternal // Use the internal async function
 );
+
