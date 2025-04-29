@@ -32,10 +32,12 @@ export default function Recommendations() {
       setRecommendationError(null);
       setAiAvailable(null); // Reset AI availability status on each fetch
 
+      // Prevent fetching if AI not configured or history/cart empty
       if (searchHistory.length === 0 && cartItems.length === 0) {
         setIsLoadingRecommendations(false);
         setRecommendations([]); // No basis for recommendations
         setAiAvailable(true); // Assume AI is available but no data to process
+        console.log("Skipping recommendations: No search history or cart items.");
         return;
       }
 
@@ -49,31 +51,39 @@ export default function Recommendations() {
 
         // Check for errors returned by the server action
         if (!result.success || !result.output) {
+            const errorMsg = result.error || "Failed to get recommendations.";
              // Distinguish between "not configured" and "invalid key"
-             if (result.error?.includes("AI service is not configured")) {
+             if (errorMsg.includes("AI service is not configured")) {
                  setAiAvailable(false);
-             } else if (result.error?.includes("Invalid API Key")) {
+             } else if (errorMsg.includes("Invalid API Key")) {
                  setAiAvailable(false); // Treat invalid key as not available for UI purposes
              } else {
                  setAiAvailable(true); // Assume available but another error occurred
              }
-             throw new Error(result.error || "Failed to get recommendations.");
+             // Set the error state instead of throwing
+             setRecommendationError(errorMsg);
+             setRecommendations([]);
+             console.error("Server action returned error:", errorMsg);
+             // Don't throw here, let the component render the error state
+        } else {
+            // Success case
+            setAiAvailable(true); // AI is configured and worked
+            // Map AI recommendations (product names) to actual Product objects
+            const recommendedProducts = result.output.recommendations
+              .map(recName => findProductByName(recName)) // Use helper function
+              .filter((p): p is Product => p !== undefined); // Filter out undefined results
+
+            setRecommendations(recommendedProducts);
         }
-        setAiAvailable(true); // AI is configured and worked if we get a successful response
-
-        // Map AI recommendations (product names) to actual Product objects
-        const recommendedProducts = result.output.recommendations
-          .map(recName => findProductByName(recName)) // Use helper function
-          .filter((p): p is Product => p !== undefined); // Filter out undefined results
-
-        setRecommendations(recommendedProducts);
 
       } catch (error) {
-        console.error("Error fetching recommendations:", error);
-        const errorMessage = error instanceof Error ? error.message : "Could not load recommendations at this time.";
+        // Catch unexpected errors during the action call itself (e.g., network issues)
+        console.error("Unexpected error fetching recommendations:", error);
+        const errorMessage = error instanceof Error ? error.message : "Could not load recommendations due to an unexpected issue.";
         setRecommendationError(errorMessage);
         setRecommendations([]);
-        // AI availability is already set within the try/catch based on specific errors
+        // We don't know the AI state for sure here, might leave it as null or guess true
+        // setAiAvailable(null); // Or true, depending on desired UI
       } finally {
         setIsLoadingRecommendations(false);
       }
@@ -171,11 +181,18 @@ export default function Recommendations() {
 
   // Return null or a placeholder if no recommendations and no error/loading,
   // or if AI is available but there were no recommendations (e.g., insufficient history)
-  if (aiAvailable === true && recommendations.length === 0 && !isLoadingRecommendations) {
+  if (aiAvailable === true && recommendations.length === 0 && !isLoadingRecommendations && !recommendationError) {
     // Optionally, show a message indicating no recommendations based on current data
     // console.log("No recommendations to display based on current activity.");
-    return null;
+    return null; // Don't show the section if there's nothing to recommend and no error
   }
+
+  // Fallback case: If loading is done but AI state is still null (should be rare)
+  if (!isLoadingRecommendations && aiAvailable === null) {
+     console.warn("Recommendation component finished loading but AI availability is undetermined.");
+     return null;
+  }
+
 
   return null; // Default return null if none of the above conditions are met
 }
