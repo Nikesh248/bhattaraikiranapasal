@@ -23,14 +23,36 @@ const RecommendProductsOutputSchema = z.object({
 });
 export type RecommendProductsOutput = z.infer<typeof RecommendProductsOutputSchema>;
 
+// This internal function is called by the Server Action
+async function recommendProductsFlowInternal(input: RecommendProductsInput): Promise<RecommendProductsOutput> {
+    try {
+        // Double-check AI config within the flow execution
+        // ensureAiIsConfigured(); // This check can be done in the action or here
+        const {output} = await prompt(input);
+        if (!output) {
+            throw new Error("AI prompt did not return an output.");
+        }
+        return output;
+    } catch (error) {
+        console.error('Error in recommendProductsFlowInternal:', error);
+        // Re-throw specific errors for the action layer to handle
+        if (error instanceof Error && /API key not valid/i.test(error.message)) {
+             throw new Error("Failed to get recommendations: Invalid API Key. Please check server configuration.");
+        }
+         if (error instanceof Error && /AI features are not configured/i.test(error.message)) {
+            throw new Error("Failed to get recommendations: AI service is not configured.");
+        }
+        // Throw a more generic error for other issues
+        throw new Error("Failed to get recommendations due to an internal error.");
+    }
+}
+
+
+// Exported function to be used by Server Actions. It wraps the flow definition.
+// Error handling and AI availability checks are better handled in the calling Server Action.
 export async function recommendProducts(input: RecommendProductsInput): Promise<RecommendProductsOutput> {
-  // Check if AI is configured before attempting to run the flow
-  if (!isAiConfigured) {
-      console.warn("Attempted to call recommendProductsFlow, but AI is not configured (GOOGLE_GENAI_API_KEY missing or invalid).");
-      // Return empty recommendations or throw a specific error
-      return { recommendations: [] };
-      // Or: throw new Error("AI features are not available. Please configure the API key.");
-  }
+  // We ensure AI is configured in the action that calls this.
+  // If called directly elsewhere, the caller should check isAiConfigured.
   return recommendProductsFlow(input);
 }
 
@@ -52,11 +74,32 @@ const prompt = ai.definePrompt({
         .describe('A list of product recommendations based on the search history.'),
     }),
   },
-  prompt: `Based on the user's past search history: {{searchHistory}},
-  and the items in their current cart (if any): {{currentCart}},
-  recommend {{numberOfRecommendations}} relevant products they might be interested in. Return the recommendations as a list of product names, separated by commas.`,
+  // Adjusted prompt for clarity and to potentially handle empty history/cart better
+  prompt: `You are a helpful shopping assistant for Bhattarai Kirana Pasal.
+Based on the user's recent search history:
+{{#if searchHistory}}
+{{#each searchHistory}}
+- {{{this}}}
+{{/each}}
+{{else}}
+(No search history provided)
+{{/if}}
+
+And the items currently in their cart:
+{{#if currentCart}}
+{{#each currentCart}}
+- {{{this}}}
+{{/each}}
+{{else}}
+(Cart is empty)
+{{/if}}
+
+Recommend {{numberOfRecommendations}} relevant products available at the store that they might be interested in.
+Focus on suggesting items that complement their searches or cart items. If history and cart are empty, suggest popular items.
+Return ONLY a list of product names.`,
 });
 
+// Define the flow using the internal function for cleaner error propagation
 const recommendProductsFlow = ai.defineFlow<
   typeof RecommendProductsInputSchema,
   typeof RecommendProductsOutputSchema
@@ -66,22 +109,5 @@ const recommendProductsFlow = ai.defineFlow<
     inputSchema: RecommendProductsInputSchema,
     outputSchema: RecommendProductsOutputSchema,
   },
-  async input => {
-    try {
-        ensureAiIsConfigured(); // Double-check within the flow execution
-        const {output} = await prompt(input);
-        return output!;
-    } catch (error) {
-        console.error('Error in recommendProductsFlow:', error);
-        // Check if the error message indicates an API key issue
-        if (error instanceof Error && /API key not valid/i.test(error.message)) {
-             throw new Error("Failed to get recommendations: Invalid API Key. Please check server configuration.");
-        }
-         if (error instanceof Error && /AI features are not configured/i.test(error.message)) {
-            throw new Error("Failed to get recommendations: AI service is not configured.");
-        }
-        // Throw a more generic error for other issues
-        throw new Error("Failed to get recommendations due to an internal error.");
-    }
-  }
+  recommendProductsFlowInternal // Use the internal async function
 );
