@@ -8,7 +8,7 @@
  * - SendOrderConfirmationEmailOutput - Output type for the flow (simple success/failure).
  */
 
-import { ai } from '@/ai/ai-instance';
+import { ai, ensureAiIsConfigured, isAiConfigured } from '@/ai/ai-instance';
 import { z } from 'genkit';
 
 // Define input schema for the email flow
@@ -45,6 +45,18 @@ export type SendOrderConfirmationEmailOutput = z.infer<typeof SendOrderConfirmat
 
 // Exported function to call the flow
 export async function sendOrderConfirmationEmail(input: SendOrderConfirmationEmailInput): Promise<SendOrderConfirmationEmailOutput> {
+   // Check if AI is configured before attempting to run the flow
+   if (!isAiConfigured) {
+       console.warn("Attempted to call sendOrderConfirmationEmailFlow, but AI is not configured (GOOGLE_GENAI_API_KEY missing or invalid). Email generation will be skipped.");
+       // Skip email generation but log the attempt to send
+       console.log(`--- Skipping Email Generation (AI Not Configured) ---`);
+       console.log(`To: ${input.recipientEmail}`);
+       console.log(`Order for: ${input.userName}`);
+       console.log(`Total: Rs. ${input.totalAmount}`);
+       console.log(`--- Would have sent (Simulated) ---`);
+       // Return success=true because the main order process might succeed, but indicate email wasn't sent
+       return { success: true, message: 'Order placed, but confirmation email generation skipped (AI not configured).' };
+   }
   return sendOrderConfirmationEmailFlow(input);
 }
 
@@ -104,6 +116,7 @@ const sendOrderConfirmationEmailFlow = ai.defineFlow<
   },
   async (input) => {
     try {
+      ensureAiIsConfigured(); // Double-check AI config within the flow
       // 1. Generate the email content using the prompt
       const { output } = await emailPrompt(input);
 
@@ -131,6 +144,12 @@ const sendOrderConfirmationEmailFlow = ai.defineFlow<
 
     } catch (error) {
       console.error('Error in sendOrderConfirmationEmailFlow:', error);
+       if (error instanceof Error && /API key not valid/i.test(error.message)) {
+           return { success: false, message: 'Failed to generate email: Invalid API Key. Please check server configuration.' };
+       }
+        if (error instanceof Error && /AI features are not configured/i.test(error.message)) {
+           return { success: false, message: 'Failed to generate email: AI service is not configured.' };
+       }
       return { success: false, message: error instanceof Error ? error.message : 'An unknown error occurred while sending the email.' };
     }
   }
@@ -141,3 +160,4 @@ const sendOrderConfirmationEmailFlow = ai.defineFlow<
 // using a library like Nodemailer and an email service provider (like SendGrid, etc.)
 // to actually send the email generated in the `body` variable.
 // The console.log above simulates this step.
+

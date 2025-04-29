@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Recommends products based on user's search history.
@@ -7,8 +8,8 @@
  * - RecommendProductsOutput - The return type for the recommendProducts function.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
+import { ai, ensureAiIsConfigured, isAiConfigured } from '@/ai/ai-instance';
+import { z } from 'genkit';
 
 const RecommendProductsInputSchema = z.object({
   searchHistory: z.array(z.string()).describe('The user\'s search history.'),
@@ -23,6 +24,13 @@ const RecommendProductsOutputSchema = z.object({
 export type RecommendProductsOutput = z.infer<typeof RecommendProductsOutputSchema>;
 
 export async function recommendProducts(input: RecommendProductsInput): Promise<RecommendProductsOutput> {
+  // Check if AI is configured before attempting to run the flow
+  if (!isAiConfigured) {
+      console.warn("Attempted to call recommendProductsFlow, but AI is not configured (GOOGLE_GENAI_API_KEY missing or invalid).");
+      // Return empty recommendations or throw a specific error
+      return { recommendations: [] };
+      // Or: throw new Error("AI features are not available. Please configure the API key.");
+  }
   return recommendProductsFlow(input);
 }
 
@@ -59,7 +67,21 @@ const recommendProductsFlow = ai.defineFlow<
     outputSchema: RecommendProductsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
-    return output!;
+    try {
+        ensureAiIsConfigured(); // Double-check within the flow execution
+        const {output} = await prompt(input);
+        return output!;
+    } catch (error) {
+        console.error('Error in recommendProductsFlow:', error);
+        // Check if the error message indicates an API key issue
+        if (error instanceof Error && /API key not valid/i.test(error.message)) {
+             throw new Error("Failed to get recommendations: Invalid API Key. Please check server configuration.");
+        }
+         if (error instanceof Error && /AI features are not configured/i.test(error.message)) {
+            throw new Error("Failed to get recommendations: AI service is not configured.");
+        }
+        // Throw a more generic error for other issues
+        throw new Error("Failed to get recommendations due to an internal error.");
+    }
   }
 );

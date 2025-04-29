@@ -9,7 +9,8 @@ import { useCartStore } from '@/hooks/use-cart';
 import { recommendProducts } from '@/ai/flows/product-recommendations';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Lightbulb } from "lucide-react";
+import { Lightbulb, AlertCircle } from "lucide-react";
+import { isAiConfigured } from '@/ai/ai-instance'; // Import check for AI configuration
 
 // Helper function to find product by name (case-insensitive)
 const findProductByName = (name: string): Product | undefined => {
@@ -23,10 +24,22 @@ export default function Recommendations() {
   const [recommendationError, setRecommendationError] = useState<string | null>(null);
   const searchHistory = useCartStore((state) => state.searchHistory);
   const cartItems = useCartStore((state) => state.items);
+  const [aiAvailable, setAiAvailable] = useState(false); // Track AI availability client-side
 
   useEffect(() => {
+    // Check AI configuration status on the client after mount
+    setAiAvailable(isAiConfigured);
+
     const fetchRecommendations = async () => {
-      // Only fetch if there's history or items in cart to base recommendations on
+      // Only fetch if AI is configured and there's history/cart
+      if (!isAiConfigured) {
+          console.log("AI not configured, skipping recommendations fetch.");
+          setIsLoadingRecommendations(false);
+          setRecommendations([]);
+          setRecommendationError("AI recommendations are currently unavailable. Please ensure the API key is configured.");
+          return;
+      }
+
       if (searchHistory.length === 0 && cartItems.length === 0) {
         setIsLoadingRecommendations(false);
         setRecommendations([]); // No basis for recommendations
@@ -51,7 +64,8 @@ export default function Recommendations() {
 
       } catch (error) {
         console.error("Error fetching recommendations:", error);
-        setRecommendationError("Could not load recommendations at this time.");
+        const errorMessage = error instanceof Error ? error.message : "Could not load recommendations at this time.";
+        setRecommendationError(errorMessage);
         setRecommendations([]);
       } finally {
         setIsLoadingRecommendations(false);
@@ -62,8 +76,8 @@ export default function Recommendations() {
   }, [searchHistory, cartItems]); // Re-fetch when search history or cart changes
 
 
-  // Render loading state
-  if (isLoadingRecommendations) {
+  // Render loading state only if AI is expected to be available
+  if (isLoadingRecommendations && aiAvailable) {
     return (
        <section>
            <Alert className="bg-secondary border-primary/50">
@@ -81,20 +95,21 @@ export default function Recommendations() {
     );
   }
 
-  // Render error state
+  // Render error state (includes AI not configured error)
   if (recommendationError) {
     return (
       <section>
         <Alert variant="destructive">
-          <AlertTitle>Error</AlertTitle>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Recommendation Error</AlertTitle>
           <AlertDescription>{recommendationError}</AlertDescription>
         </Alert>
       </section>
     );
   }
 
-  // Render recommendations if available
-  if (recommendations.length > 0) {
+  // Render recommendations if available and AI is configured
+  if (aiAvailable && recommendations.length > 0) {
     return (
       <section>
          <Alert className="bg-secondary border-primary/50">
@@ -113,6 +128,6 @@ export default function Recommendations() {
     );
   }
 
-  // Return null or a placeholder if no recommendations and no error/loading
+  // Return null or a placeholder if no recommendations and no error/loading, or if AI is not configured and loading is done
   return null;
 }

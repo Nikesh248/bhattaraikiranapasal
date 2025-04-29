@@ -1,40 +1,62 @@
 
-import { genkit, GenkitPlugin } from 'genkit';
+import { genkit, GenkitPlugin, GenkitConfig } from 'genkit';
 import { googleAI } from '@genkit-ai/googleai';
 
 // Define the plugins array
 const plugins: GenkitPlugin[] = [];
+let modelIsAvailable = false;
+
+// Base Genkit configuration
+const genkitConfig: GenkitConfig = {
+  promptDir: './prompts',
+  plugins: plugins,
+  logLevel: 'debug', // Keep logs for debugging
+  enableTracingAndMetrics: true, // Enable tracing
+};
 
 // Check if the Google Generative AI API key is provided in environment variables
 if (process.env.GOOGLE_GENAI_API_KEY) {
-  plugins.push(
-    googleAI({
-      apiKey: process.env.GOOGLE_GENAI_API_KEY,
-    })
-  );
+  try {
+    plugins.push(
+      googleAI({
+        apiKey: process.env.GOOGLE_GENAI_API_KEY,
+      })
+    );
+    // If the plugin is added successfully, specify the model
+    genkitConfig.model = 'googleai/gemini-2.0-flash';
+    modelIsAvailable = true;
+    console.log("Google AI plugin loaded successfully.");
+  } catch (error) {
+      console.error("********************************************************************");
+      console.error("ERROR: Failed to initialize Google AI plugin. Please check your API key and configuration.");
+      console.error("Error details:", error);
+      console.error("AI features requiring the Google AI plugin will not function.");
+      console.error("Get your API key from Google AI Studio: https://aistudio.google.com/app/apikey");
+      console.error("********************************************************************");
+      modelIsAvailable = false; // Ensure model is marked as unavailable
+  }
 } else {
   console.warn(
     '\n********************************************************************\n' +
     'WARNING: GOOGLE_GENAI_API_KEY environment variable not found.\n' +
     'AI features requiring the Google AI plugin will not function.\n' +
-    'Please create a .env file in the root directory and add:\n' +
+    'Please create a .env.local file in the root directory and add:\n' +
     'GOOGLE_GENAI_API_KEY=YOUR_API_KEY_HERE\n' +
     'Get your API key from Google AI Studio: https://aistudio.google.com/app/apikey\n' +
     '********************************************************************\n'
   );
-  // Optionally, you could add a placeholder/mock plugin here for development
-  // Or allow the app to run without AI capabilities.
+  modelIsAvailable = false;
 }
 
+// Initialize Genkit with the conditional configuration
+export const ai = genkit(genkitConfig);
 
-export const ai = genkit({
-  promptDir: './prompts',
-  plugins: plugins,
-  // Specify a model. If the Google AI plugin is not loaded,
-  // Genkit might throw an error if no default model is available.
-  // Consider adding a check or default behavior if no plugins are loaded.
-  // For now, we keep the model definition, but flows will fail if the plugin is missing.
-  model: 'googleai/gemini-2.0-flash',
-  logLevel: 'debug', // Keep logs for debugging
-  enableTracingAndMetrics: true, // Enable tracing
-});
+// Export a flag indicating if the primary AI model is available
+export const isAiConfigured = modelIsAvailable;
+
+// Optional: Add a check function to be used within flows
+export function ensureAiIsConfigured() {
+    if (!isAiConfigured) {
+        throw new Error("AI features are not configured. Please check the GOOGLE_GENAI_API_KEY environment variable.");
+    }
+}

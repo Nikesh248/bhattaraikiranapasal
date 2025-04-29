@@ -8,7 +8,7 @@
  * - SendPasswordResetRequestEmailOutput - Output type for the flow (simple success/failure).
  */
 
-import { ai } from '@/ai/ai-instance';
+import { ai, ensureAiIsConfigured, isAiConfigured } from '@/ai/ai-instance';
 import { z } from 'genkit';
 
 // Define input schema for the flow
@@ -26,6 +26,17 @@ export type SendPasswordResetRequestEmailOutput = z.infer<typeof SendPasswordRes
 
 // Exported function to call the flow
 export async function sendPasswordResetRequestEmail(input: SendPasswordResetRequestEmailInput): Promise<SendPasswordResetRequestEmailOutput> {
+    // Check if AI is configured before attempting to run the flow
+    if (!isAiConfigured) {
+        console.warn("Attempted to call sendPasswordResetRequestEmailFlow, but AI is not configured (GOOGLE_GENAI_API_KEY missing or invalid). Admin notification email generation will be skipped.");
+        // Log the attempt to send
+        console.log(`--- Skipping Admin Notification Email Generation (AI Not Configured) ---`);
+        console.log(`Password reset requested by: ${input.customerEmail}`);
+        console.log(`Admin would have been notified at: nikeshdon66@gmail.com`);
+        console.log(`--- Would have sent (Simulated) ---`);
+        // Return success as the main request might succeed, but indicate email wasn't sent
+        return { success: true, message: 'Password reset requested, but admin notification email generation skipped (AI not configured).' };
+    }
   return sendPasswordResetRequestEmailFlow(input);
 }
 
@@ -67,6 +78,7 @@ const sendPasswordResetRequestEmailFlow = ai.defineFlow<
   },
   async (input) => {
     try {
+        ensureAiIsConfigured(); // Double-check AI config within the flow
       // 1. Generate the email content using the prompt
       const { output } = await emailPrompt(input);
 
@@ -94,6 +106,12 @@ const sendPasswordResetRequestEmailFlow = ai.defineFlow<
 
     } catch (error) {
       console.error('Error in sendPasswordResetRequestEmailFlow:', error);
+       if (error instanceof Error && /API key not valid/i.test(error.message)) {
+           return { success: false, message: 'Failed to generate admin notification: Invalid API Key. Please check server configuration.' };
+       }
+        if (error instanceof Error && /AI features are not configured/i.test(error.message)) {
+           return { success: false, message: 'Failed to generate admin notification: AI service is not configured.' };
+       }
       return { success: false, message: error instanceof Error ? error.message : 'An unknown error occurred while sending the notification email.' };
     }
   }
@@ -102,3 +120,4 @@ const sendPasswordResetRequestEmailFlow = ai.defineFlow<
 // IMPORTANT: This flow ONLY notifies the admin. It does NOT send a reset link to the customer.
 // Actual password reset functionality requires secure token generation, backend validation,
 // and sending a separate email to the customer, which is beyond the scope of this notification flow.
+
