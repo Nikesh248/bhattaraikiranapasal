@@ -1,25 +1,23 @@
 
 import { Suspense } from 'react';
 import Image from 'next/image';
-import { getFeaturedProducts, getAllProducts } from '@/lib/data'; // Use async functions
+import { getAllProducts } from '@/lib/data'; // Use async function to get all products
 import { Skeleton } from '@/components/ui/skeleton';
 import Recommendations from '@/components/recommendations'; // Import the client component
 import ProductList from '@/components/product-list'; // Import the new client component
 
 // --- Server Component ---
 export default async function Home() {
-  // Fetch data directly on the server
-  // Using Promise.all for concurrent fetching
-  const [rawFeaturedProducts, rawAllProducts] = await Promise.all([
-    getFeaturedProducts(6),
-    getAllProducts() // Fetch all products for the "All Products" section
-  ]);
+  // Fetch all products directly on the server
+  const rawAllProducts = await getAllProducts();
 
-  // Filter out the specific product
+  // Filter out the specific product (if still needed, though it might be better removed from data.ts)
   const productIdToRemove = "prod_001";
-  const featuredProducts = rawFeaturedProducts.filter(p => p.id !== productIdToRemove);
   const allProducts = rawAllProducts.filter(p => p.id !== productIdToRemove);
 
+  // Simulate fetching the "latest" products by taking the last N items
+  const numberOfLatestProducts = 6;
+  const latestProducts = allProducts.slice(-numberOfLatestProducts);
 
   return (
     <div className="space-y-12">
@@ -45,17 +43,15 @@ export default async function Home() {
         <Recommendations />
       </Suspense>
 
-      {/* Featured Products Section (Using Client Component) */}
+      {/* Latest Products Section */}
       <section>
-        {/* Removed Featured Products heading */}
-        <ProductList initialProducts={featuredProducts} />
+        <h2 className="text-3xl font-bold mb-6 text-primary">Latest Products</h2>
+        {/* Use ProductList to display the latest products */}
+        <ProductList initialProducts={latestProducts} />
       </section>
 
-      {/* All Products Section (Using Client Component) */}
-      <section>
-        <h2 className="text-3xl font-bold mb-6 text-primary">All Products</h2>
-        <ProductList initialProducts={allProducts} />
-      </section>
+      {/* Removed Featured Products Section */}
+      {/* Removed All Products Section */}
     </div>
   );
 }
@@ -76,15 +72,3 @@ function RecommendationsSkeleton() {
     </section>
   );
 }
-
-// Skeleton for ProductList (optional, if loading takes time)
-// function ProductListSkeleton() {
-//   return (
-//     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-//       {[...Array(4)].map((_, index) => (
-//         <Skeleton key={index} className="h-[350px] w-full rounded-lg" />
-//       ))}
-//     </div>
-//   );
-// }
-
