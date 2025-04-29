@@ -1,4 +1,4 @@
-# Bhattarai Kirana Pasal App (PasalPal)
+**# Bhatta**rai Kirana Pasal App (PasalPal)
 
 This is a Next.js e-commerce application for Bhattarai Kirana Pasal, built using Firebase Studio.
 
@@ -21,7 +21,7 @@ This is a Next.js e-commerce application for Bhattarai Kirana Pasal, built using
         ```
     *   **Admin Secret Key (Optional but Recommended):** For admin signup functionality, you can set a secret key. Add this line to `.env.local` (replace `"seller@seller"` with your desired secure key if needed, otherwise the default will be used):
         ```
-        ADMIN_SECRET_KEY="seller@seller"
+        ADMIN_SECRET_KEY="secret"
         ```
 
     **Important:** Never commit your `.env.local` file to version control (it's typically included in `.gitignore`).
