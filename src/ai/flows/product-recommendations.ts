@@ -51,11 +51,16 @@ async function recommendProductsFlowInternal(input: RecommendProductsInput): Pro
                  logger.warn("Invalid API Key detected in flow.");
                  throw new Error("Failed to get recommendations: Invalid API Key. Please check server configuration.");
             }
-             if (/AI features are not configured/i.test(error.message)) {
-                logger.warn("AI features not configured error caught in flow.");
-                throw new Error("Failed to get recommendations: AI service is not configured.");
+            if (/AI features are not configured/i.test(error.message)) {
+               logger.warn("AI features not configured error caught in flow.");
+               throw new Error("Failed to get recommendations: AI service is not configured.");
             }
-            // Include original error message for other cases
+             // Check for model overload / 503 error
+            if (/503 Service Unavailable/i.test(error.message) || /model is overloaded/i.test(error.message)) {
+                logger.warn("Model overload error detected in flow.");
+                throw new Error("Failed to get recommendations: The recommendation service is temporarily busy. Please try again later.");
+            }
+            // Include original error message for other internal errors
             logger.error("Generic internal error in flow:", error.message);
             throw new Error(`Failed to get recommendations due to an internal error: ${error.message}`);
         }
@@ -72,6 +77,10 @@ export async function recommendProducts(input: RecommendProductsInput): Promise<
   // We ensure AI is configured in the action that calls this.
   // If called directly elsewhere, the caller should check isAiConfigured.
   logger.info("recommendProducts action handler called.");
+  if (!isAiConfigured) {
+      logger.warn("Attempted to call recommendProducts but AI is not configured.");
+      throw new Error("AI service is not configured."); // Throw error if called when AI is not configured
+  }
   return recommendProductsFlow(input);
 }
 
@@ -130,4 +139,5 @@ const recommendProductsFlow = ai.defineFlow<
   },
   recommendProductsFlowInternal // Use the internal async function
 );
+
 
