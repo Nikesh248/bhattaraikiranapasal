@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -18,7 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Label is used via FormLabel
 import {
   Form,
   FormControl,
@@ -30,9 +29,18 @@ import {
 import { useAuthStore } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
+// Validation Schema: Email OR Nepali Phone Number (adjust regex as needed)
 const signupSchema = z.object({
   fullName: z.string().min(2, { message: 'Full name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Invalid email address.' }),
+  // Rename 'email' to 'identifier' and add refine validation
+  identifier: z.string().refine(
+    (value) => {
+      const emailSchema = z.string().email();
+      const phoneRegex = /^9[78]\d{8}$/; // Simple Nepali mobile regex (98/97 + 8 digits)
+      return emailSchema.safeParse(value).success || phoneRegex.test(value);
+    },
+    { message: 'Please enter a valid email or phone number (e.g., 98XXXXXXXX).' }
+  ),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -40,6 +48,7 @@ const signupSchema = z.object({
   path: ['confirmPassword'], // path of error
 });
 
+// Update type alias
 type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
@@ -50,9 +59,10 @@ export default function SignupPage() {
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
+    // Update defaultValues
     defaultValues: {
       fullName: '',
-      email: '',
+      identifier: '', // Changed from email
       password: '',
       confirmPassword: '',
     },
@@ -66,10 +76,11 @@ export default function SignupPage() {
 
       // In a real app, you'd create the user account via backend API
       // For this mock, we assume signup is successful
+      // Use identifier as email for mock signup - adapt if backend changes
       signup({
         id: 'user_' + Date.now(), // Mock user ID
         name: data.fullName,
-        email: data.email,
+        email: data.identifier, // Pass identifier here
       });
       toast({
         title: 'Signup Successful',
@@ -110,14 +121,17 @@ export default function SignupPage() {
                   </FormItem>
                 )}
               />
+              {/* Update FormField for identifier */}
               <FormField
                 control={form.control}
-                name="email"
+                name="identifier" // Changed from email
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    {/* Update FormLabel */}
+                    <FormLabel>Email or Phone Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="you@example.com" {...field} disabled={isLoading} />
+                      {/* Update Input placeholder */}
+                      <Input placeholder="you@example.com or 98XXXXXXXX" {...field} disabled={isLoading} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
