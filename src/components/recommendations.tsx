@@ -3,7 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import ProductCard from '@/components/product/product-card';
-import { mockProducts } from '@/lib/data'; // Keep using mockProducts for finding recommendations for now
+// Remove the incorrect import: import { mockProducts } from '@/lib/data';
+import { getAllProducts } from '@/lib/data'; // Import the function to fetch all products
 import type { Product } from '@/types';
 import { useCartStore } from '@/hooks/use-cart';
 // Import the server action instead of the flow directly
@@ -12,11 +13,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Lightbulb, AlertCircle } from "lucide-react";
 
-// Helper function to find product by name (case-insensitive)
-const findProductByName = (name: string): Product | undefined => {
-  const lowerCaseName = name.toLowerCase();
-  return mockProducts.find(p => p.name.toLowerCase() === lowerCaseName);
-};
 
 export default function Recommendations() {
   const [recommendations, setRecommendations] = useState<Product[]>([]);
@@ -27,10 +23,29 @@ export default function Recommendations() {
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null); // Track AI availability client-side, null initially
 
   useEffect(() => {
-    const fetchRecommendations = async () => {
+    const fetchRecommendationsAndProducts = async () => {
       setIsLoadingRecommendations(true);
       setRecommendationError(null);
       setAiAvailable(null); // Reset AI availability status on each fetch
+
+      // Fetch all products first to map recommendations
+      let allProducts: Product[] = [];
+      try {
+        allProducts = await getAllProducts(); // Use the exported function
+      } catch (error) {
+        console.error("Failed to fetch all products for recommendations:", error);
+        setRecommendationError("Could not load product data for recommendations.");
+        setIsLoadingRecommendations(false);
+        return; // Stop if we can't get products
+      }
+
+      // Helper function using the fetched products
+      const findProductByNameLocal = (name: string): Product | undefined => {
+        if (!name) return undefined; // Handle cases where name might be empty/null
+        const lowerCaseName = name.toLowerCase();
+        return allProducts.find(p => p.name.toLowerCase() === lowerCaseName);
+      };
+
 
       // Prevent fetching if AI not configured or history/cart empty
       if (searchHistory.length === 0 && cartItems.length === 0) {
@@ -53,10 +68,8 @@ export default function Recommendations() {
         if (!result.success || !result.output) {
             const errorMsg = result.error || "Failed to get recommendations.";
              // Distinguish between "not configured" and "invalid key" based on the error message from the flow
-             if (errorMsg.includes("AI service is not configured")) {
+             if (errorMsg.includes("AI service is not configured") || errorMsg.includes("Invalid API Key")) {
                  setAiAvailable(false);
-             } else if (errorMsg.includes("Invalid API Key")) {
-                 setAiAvailable(false); // Treat invalid key as not available for UI purposes
              } else {
                  setAiAvailable(true); // Assume available but another error occurred
              }
@@ -70,7 +83,7 @@ export default function Recommendations() {
             setAiAvailable(true); // AI is configured and worked
             // Map AI recommendations (product names) to actual Product objects
             const recommendedProducts = result.output.recommendations
-              .map(recName => findProductByName(recName)) // Use helper function
+              .map(recName => findProductByNameLocal(recName)) // Use the local helper
               .filter((p): p is Product => p !== undefined); // Filter out undefined results
 
             setRecommendations(recommendedProducts);
@@ -89,7 +102,7 @@ export default function Recommendations() {
       }
     };
 
-    fetchRecommendations();
+    fetchRecommendationsAndProducts();
   }, [searchHistory, cartItems]); // Re-fetch when search history or cart changes
 
 
@@ -136,7 +149,8 @@ export default function Recommendations() {
            <AlertTitle>{errorTitle}</AlertTitle>
            <AlertDescription>
               {errorDescription}
-              <p className="mt-2 text-xs">You can obtain an API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>.</p>
+              <p className="mt-2 text-xs">If you are the site administrator, check the server logs and ensure the GOOGLE_GENAI_API_KEY environment variable is set correctly.</p>
+              <p className="mt-1 text-xs">You can obtain an API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>.</p>
             </AlertDescription>
          </Alert>
        </section>
