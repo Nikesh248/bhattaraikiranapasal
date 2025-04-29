@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, User, Menu, LogIn, LogOut, History } from 'lucide-react';
+import { ShoppingCart, Search, User, Menu, LogIn, LogOut, History, PackagePlus } from 'lucide-react'; // Added PackagePlus icon
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +40,9 @@ export default function Header() {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Simple mock admin check - replace with real logic if needed
+  const isAdmin = user?.email === 'admin@pasal.com';
 
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
@@ -106,6 +109,12 @@ export default function Header() {
                      <History className="h-4 w-4" /> Order History
                    </Link>
                 )}
+                 {/* Conditionally render Add Item for admin users */}
+                {isClient && isAuthenticated && isAdmin && (
+                   <Link href="/admin/add-item" className="text-sm font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1">
+                     <PackagePlus className="h-4 w-4" /> Add Item
+                   </Link>
+                )}
              </nav>
            </div>
 
@@ -133,7 +142,7 @@ export default function Header() {
                  <ShoppingCart className="h-5 w-5" />
                  {/* Only render the badge on the client when items exist */}
                  {isClient && totalItems > 0 && (
-                   <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0 text-xs">
+                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0 text-xs bg-destructive text-destructive-foreground">
                      {totalItems}
                    </Badge>
                  )}
@@ -154,7 +163,7 @@ export default function Header() {
                      <DropdownMenuTrigger asChild>
                        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                          <Avatar className="h-8 w-8">
-                           <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name} />
+                           <AvatarImage src={`https://avatar.vercel.sh/${user.email}.png`} alt={user.name || ''} />
                            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
                          </Avatar>
                        </Button>
@@ -181,6 +190,15 @@ export default function Header() {
                            <span>Order History</span>
                          </Link>
                        </DropdownMenuItem>
+                       {/* Admin-only item */}
+                       {isAdmin && (
+                         <DropdownMenuItem asChild>
+                           <Link href="/admin/add-item">
+                             <PackagePlus className="mr-2 h-4 w-4" />
+                             <span>Add Item</span>
+                           </Link>
+                         </DropdownMenuItem>
+                        )}
                        <DropdownMenuSeparator />
                        <DropdownMenuItem onClick={handleLogout}>
                          <LogOut className="mr-2 h-4 w-4" />
@@ -247,6 +265,16 @@ export default function Header() {
                            <History className="h-5 w-5" /> Order History
                          </Link>
                       )}
+                      {/* Conditionally render Add Item for admin users */}
+                      {isClient && isAuthenticated && isAdmin && (
+                         <Link
+                           href="/admin/add-item"
+                           className="flex items-center gap-2 px-2 py-2 text-lg font-medium text-foreground hover:text-primary transition-colors rounded-md hover:bg-primary/10"
+                           onClick={() => setIsMobileMenuOpen(false)}
+                         >
+                           <PackagePlus className="h-5 w-5" /> Add Item
+                         </Link>
+                      )}
                    </nav>
 
                    {/* Mobile Auth Section - Only render on client */}
@@ -296,5 +324,3 @@ export default function Header() {
      </header>
    );
 }
-
-
