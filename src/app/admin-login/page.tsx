@@ -27,9 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-// Note: We might need a separate auth store or method for admin login in a real app
-// For now, we'll reuse the user auth store for simplicity, but this should be different.
-// import { useAdminAuthStore } from '@/hooks/use-admin-auth'; // Example for a separate store
+// Note: We use the user auth store for simplicity, but a real app needs separate admin auth.
 import { useAuthStore } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,7 +40,6 @@ type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  // Replace with admin-specific login logic if needed
   const { login } = useAuthStore(); // Using user login for now
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -61,29 +58,31 @@ export default function AdminLoginPage() {
       // Simulate API call for admin verification
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // --- IMPORTANT ---
-      // In a real application, you MUST verify admin credentials against a secure backend endpoint.
-      // This mock logic is insecure and only for demonstration.
-      // Correct hardcoded credentials:
+      // --- MOCK ADMIN AUTHENTICATION ---
+      // In this mock setup, only hardcoded credentials work for admin login.
+      // The admin signup page creates mock users but doesn't store credentials
+      // in a way this login page can verify.
+      // Use these specific credentials to log in as admin:
       const hardcodedAdminEmail = 'admin@pasal.com';
       const hardcodedAdminPassword = 'admin123';
 
       if (data.email === hardcodedAdminEmail && data.password === hardcodedAdminPassword) {
         // Use a dedicated admin login function if available
+        // For mock purposes, log in using the user store
         login({
-          id: 'admin_' + Date.now(), // Mock admin ID
+          id: 'admin_mock_' + Date.now(), // Mock admin ID
           name: 'Admin User', // Mock admin name
           email: data.email,
-          // Add admin-specific roles or flags here if needed
+          // Add admin-specific roles or flags here if needed (e.g., isAdmin: true)
         });
         toast({
           title: 'Admin Login Successful',
           description: 'Welcome, Admin! Redirecting to dashboard...',
         });
         // Redirect to an admin dashboard or a specific admin area
-        router.push('/admin/dashboard'); // TODO: Create admin dashboard page
+        router.push('/admin/dashboard'); // Ensure admin dashboard page exists
       } else {
-        throw new Error('Invalid admin credentials. Please check email and password.');
+        throw new Error('Invalid admin credentials. Please use the hardcoded credentials for this mock.');
       }
     } catch (error) {
       toast({
@@ -103,6 +102,8 @@ export default function AdminLoginPage() {
         <CardHeader className="space-y-1 text-center">
           <CardTitle className="text-2xl font-bold">Admin Login</CardTitle>
           <CardDescription>Enter your admin credentials below</CardDescription>
+           {/* Add a note about mock credentials */}
+           <p className="text-xs text-muted-foreground pt-1">(Use admin@pasal.com / admin123 for mock login)</p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -127,7 +128,7 @@ export default function AdminLoginPage() {
                   <FormItem>
                     <div className="flex justify-between items-center">
                        <FormLabel>Password</FormLabel>
-                       {/* Add Forgot Password link here */}
+                       {/* Link to Admin Forgot Password */}
                        <Link href="/admin-forgot-password" className="text-sm text-primary hover:underline">
                          Forgot password?
                        </Link>
