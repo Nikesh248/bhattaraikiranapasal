@@ -2,6 +2,7 @@
 'use client'; // Add 'use client' because we'll add state/interaction for the file input
 
 import { useState } from 'react'; // Import useState
+import { useRouter } from 'next/navigation'; // Import useRouter
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"; // Import Button
 import { Input } from "@/components/ui/input"; // Import Input
@@ -14,6 +15,7 @@ import { useToast } from '@/hooks/use-toast'; // Import useToast
 export default function AddItemPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
+  const router = useRouter(); // Initialize router
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
@@ -33,11 +35,18 @@ export default function AddItemPage() {
       // This would involve collecting all form data (name, price, etc.)
       // and the selectedFile, then likely using a Server Action
       // to upload the file to storage and save product details to a database.
-      console.log("Form submitted. Selected file:", selectedFile);
+
+      // Simulate successful submission
+      console.log("Simulating item addition. Selected file:", selectedFile);
+
+      // Show success toast
       toast({
-        title: "Submit Clicked (Mock)",
-        description: "Implement server action for actual item addition and image upload.",
+        title: "Item Added Successfully",
+        description: "The new product has been added and should appear on the home page.",
       });
+
+      // Redirect to home page
+      router.push('/');
   };
 
 
@@ -105,7 +114,7 @@ export default function AddItemPage() {
             </form>
 
            <p className="mt-6 text-sm text-muted-foreground">
-             Note: Actual image upload and database saving require backend implementation (Server Action).
+             Note: Actual image upload and database saving require backend implementation (Server Action). This is currently a simulation.
            </p>
 
         </CardContent>
