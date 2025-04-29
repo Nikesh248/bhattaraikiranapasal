@@ -41,7 +41,7 @@ export default async function Home() {
 
       {/* Featured Products Section (Using Client Component) */}
       <section>
-        <h2 className="text-3xl font-bold mb-6 text-primary">Featured Products</h2>
+        {/* Removed Featured Products heading */}
         <ProductList initialProducts={featuredProducts} />
       </section>
 
