@@ -98,27 +98,29 @@ export default function CartPage() {
       <div className="md:col-span-2">
         <Card className="shadow-lg">
           <CardHeader>
-            {/* Conditionally render totalItemsCount */}
+            {/* Conditionally render totalItemsCount or skeleton */}
             <CardTitle className="text-2xl font-bold">
-              Your Shopping Cart {isClient ? `(${totalItemsCount} items)` : ''}
+              Your Shopping Cart {isClient ? `(${totalItemsCount} items)` : <Skeleton className="h-6 w-16 inline-block align-middle" />}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Show skeleton or message while loading */}
             {!isClient ? (
                <div className="space-y-4">
-                 <div className="flex gap-4 border-b pb-4">
-                   <Skeleton className="h-20 w-20 rounded-md bg-muted animate-pulse" />
-                   <div className="flex-grow space-y-2">
-                      <Skeleton className="h-4 w-3/4 bg-muted animate-pulse rounded" />
-                      <Skeleton className="h-4 w-1/2 bg-muted animate-pulse rounded" />
-                      <Skeleton className="h-4 w-1/4 bg-muted animate-pulse rounded" />
-                   </div>
-                   <div className="flex items-center gap-2 ml-auto">
-                      <Skeleton className="h-8 w-24 bg-muted animate-pulse rounded-md" />
-                       <Skeleton className="h-8 w-8 bg-muted animate-pulse rounded-md" />
-                   </div>
-                 </div>
+                 {[...Array(2)].map((_, i) => ( // Show a couple of skeleton items
+                    <div key={i} className="flex gap-4 border-b pb-4 last:border-b-0">
+                      <Skeleton className="h-20 w-20 rounded-md bg-muted" />
+                      <div className="flex-grow space-y-2">
+                          <Skeleton className="h-4 w-3/4 bg-muted rounded" />
+                          <Skeleton className="h-4 w-1/2 bg-muted rounded" />
+                          <Skeleton className="h-4 w-1/4 bg-muted rounded" />
+                      </div>
+                      <div className="flex items-center gap-2 ml-auto">
+                          <Skeleton className="h-8 w-24 bg-muted rounded-md" />
+                          <Skeleton className="h-8 w-8 bg-muted rounded-md" />
+                      </div>
+                    </div>
+                 ))}
                </div>
              ) : items.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">Your cart is empty.</p>
@@ -130,8 +132,9 @@ export default function CartPage() {
                       src={item.imageUrl}
                       alt={item.name}
                       fill
-                      sizes="100px"
+                      sizes="(max-width: 640px) 96px, 80px" // Specify sizes for cart images
                       className="object-cover"
+                      loading="lazy" // Lazy load cart images
                     />
                   </div>
                   <div className="flex-grow">
@@ -210,13 +213,19 @@ export default function CartPage() {
              {/* Show skeleton while loading */}
              {!isClient ? (
                <div className="space-y-3">
-                  <Skeleton className="h-4 w-2/5 rounded" />
-                  <Skeleton className="h-4 w-1/5 ml-auto rounded" />
-                  <Skeleton className="h-4 w-1/4 rounded" />
-                  <Skeleton className="h-4 w-1/6 ml-auto rounded" />
+                  <div className="flex justify-between">
+                    <Skeleton className="h-4 w-2/5 rounded" />
+                    <Skeleton className="h-4 w-1/5 ml-auto rounded" />
+                  </div>
+                   <div className="flex justify-between">
+                     <Skeleton className="h-4 w-1/4 rounded" />
+                     <Skeleton className="h-4 w-1/6 ml-auto rounded" />
+                   </div>
                   <Separator />
-                  <Skeleton className="h-6 w-1/5 rounded" />
-                  <Skeleton className="h-6 w-1/4 ml-auto rounded" />
+                   <div className="flex justify-between">
+                     <Skeleton className="h-6 w-1/5 rounded" />
+                     <Skeleton className="h-6 w-1/4 ml-auto rounded" />
+                   </div>
                </div>
              ) : (
                 <>

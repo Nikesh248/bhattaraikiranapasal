@@ -189,14 +189,58 @@ export default function CheckoutPage() {
      if (!isClient) { // Only show full skeleton if not authenticated or client not hydrated
         return (
           <div className="container mx-auto py-8">
-            <Skeleton className="h-12 w-1/4 mb-6" />
+            <Skeleton className="h-10 w-1/4 mb-6 rounded" />
             <div className="grid md:grid-cols-3 gap-8">
               <div className="md:col-span-2 space-y-6">
-                <Skeleton className="h-48 w-full rounded-lg" />
-                <Skeleton className="h-48 w-full rounded-lg" />
+                {/* Skeleton for Address Card */}
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <Skeleton className="h-5 w-5 rounded-full" />
+                            <Skeleton className="h-6 w-32 rounded" />
+                        </div>
+                        <Skeleton className="h-8 w-24 rounded-md" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-4 w-1/2 mb-1 rounded" />
+                        <Skeleton className="h-4 w-3/4 mb-1 rounded" />
+                        <Skeleton className="h-4 w-2/3 mb-1 rounded" />
+                        <Skeleton className="h-4 w-1/3 rounded" />
+                    </CardContent>
+                </Card>
+                 {/* Skeleton for Payment Card */}
+                <Card>
+                    <CardHeader className="flex flex-row items-center space-x-2">
+                       <Skeleton className="h-5 w-5 rounded-full" />
+                       <Skeleton className="h-6 w-40 rounded" />
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <Skeleton className="h-10 w-full rounded-md" />
+                        <Skeleton className="h-10 w-full rounded-md" />
+                        <Skeleton className="h-10 w-full rounded-md" />
+                    </CardContent>
+                </Card>
               </div>
+               {/* Skeleton for Order Summary Card */}
               <div className="md:col-span-1">
-                <Skeleton className="h-64 w-full rounded-lg" />
+                <Card className="shadow-lg sticky top-24">
+                  <CardHeader>
+                    <Skeleton className="h-6 w-1/2 rounded" />
+                  </CardHeader>
+                   <CardContent className="space-y-3">
+                       <Skeleton className="h-4 w-full rounded" />
+                       <Skeleton className="h-4 w-3/4 rounded" />
+                       <Separator />
+                       <Skeleton className="h-5 w-1/2 rounded" />
+                       <Skeleton className="h-5 w-1/3 rounded" />
+                       <Separator />
+                       <Skeleton className="h-6 w-1/4 rounded" />
+                       <Skeleton className="h-6 w-1/3 ml-auto rounded" />
+                   </CardContent>
+                  <CardFooter>
+                     <Skeleton className="h-12 w-full rounded-md" />
+                  </CardFooter>
+                </Card>
               </div>
             </div>
           </div>
@@ -242,10 +286,53 @@ export default function CheckoutPage() {
                                  <MapPin className="h-5 w-5 text-primary" />
                                  <CardTitle>Shipping Address</CardTitle>
                              </div>
-                              {/* Link to Sign Up Page */}
-                             <Link href="/signup" passHref legacyBehavior>
-                               <Button variant="outline" size="sm" as="a">Change Address</Button>
-                             </Link>
+                              {/* Dialog Trigger Button */}
+                              <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
+                                 <DialogTrigger asChild>
+                                   <Button variant="outline" size="sm">Change Address</Button>
+                                 </DialogTrigger>
+                                 <DialogContent className="sm:max-w-[425px]">
+                                     <DialogHeader>
+                                       <DialogTitle>Edit Shipping Address</DialogTitle>
+                                       <DialogDescription>
+                                         Update your shipping information here. Click save when you're done.
+                                       </DialogDescription>
+                                     </DialogHeader>
+                                     <div className="grid gap-4 py-4">
+                                       {/* Form Fields */}
+                                       <div className="grid grid-cols-4 items-center gap-4">
+                                           <Label htmlFor="name" className="text-right">Name</Label>
+                                           <Input id="name" name="name" value={addressFormData.name} onChange={handleAddressFormChange} className="col-span-3" />
+                                       </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                           <Label htmlFor="address" className="text-right">Address</Label>
+                                           <Input id="address" name="address" value={addressFormData.address} onChange={handleAddressFormChange} className="col-span-3" />
+                                       </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                           <Label htmlFor="city" className="text-right">City</Label>
+                                           <Input id="city" name="city" value={addressFormData.city} onChange={handleAddressFormChange} className="col-span-3" />
+                                       </div>
+                                       <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="province" className="text-right">Province</Label>
+                                           <Input id="province" name="province" value={addressFormData.province} onChange={handleAddressFormChange} className="col-span-3" />
+                                       </div>
+                                       <div className="grid grid-cols-4 items-center gap-4">
+                                           <Label htmlFor="postalCode" className="text-right">Postal Code</Label>
+                                           <Input id="postalCode" name="postalCode" value={addressFormData.postalCode} onChange={handleAddressFormChange} className="col-span-3" />
+                                       </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                           <Label htmlFor="phoneNumber" className="text-right">Phone</Label>
+                                           <Input id="phoneNumber" name="phoneNumber" value={addressFormData.phoneNumber} onChange={handleAddressFormChange} className="col-span-3" />
+                                       </div>
+                                     </div>
+                                     <DialogFooter>
+                                       <DialogClose asChild>
+                                           <Button type="button" variant="secondary">Cancel</Button>
+                                       </DialogClose>
+                                       <Button type="button" onClick={handleSaveAddress}>Save changes</Button>
+                                     </DialogFooter>
+                                 </DialogContent>
+                               </Dialog>
                         </CardHeader>
                         <CardContent>
                              {isClient ? (
@@ -257,6 +344,7 @@ export default function CheckoutPage() {
                                      <p className="text-muted-foreground">Phone: {currentAddress.phoneNumber}</p>
                                 </div>
                             ) : (
+                                // Keep skeleton simple here as it's covered by the main page skeleton
                                 <Skeleton className="h-16 w-1/2" />
                             )}
                         </CardContent>
@@ -335,15 +423,16 @@ export default function CheckoutPage() {
                                     </div>
                                 </>
                                 ) : (
+                                    // Keep skeleton simple here as it's covered by the main page skeleton
                                     <div className="space-y-3">
-                                       <Skeleton className="h-4 w-full" />
-                                       <Skeleton className="h-4 w-3/4" />
+                                       <Skeleton className="h-4 w-full rounded" />
+                                       <Skeleton className="h-4 w-3/4 rounded" />
                                        <Separator />
-                                       <Skeleton className="h-5 w-1/2" />
-                                       <Skeleton className="h-5 w-1/3" />
+                                       <Skeleton className="h-5 w-1/2 rounded" />
+                                       <Skeleton className="h-5 w-1/3 rounded" />
                                        <Separator />
-                                       <Skeleton className="h-6 w-1/4" />
-                                       <Skeleton className="h-6 w-1/3 ml-auto" />
+                                       <Skeleton className="h-6 w-1/4 rounded" />
+                                       <Skeleton className="h-6 w-1/3 ml-auto rounded" />
                                     </div>
                                 )}
                         </CardContent>

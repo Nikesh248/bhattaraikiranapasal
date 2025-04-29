@@ -12,8 +12,10 @@ export default async function Home() {
   const rawAllProducts = await getAllProducts();
 
   // Filter out the specific product (if still needed, though it might be better removed from data.ts)
-  const productIdToRemove = "prod_001";
-  const allProducts = rawAllProducts.filter(p => p.id !== productIdToRemove);
+  // const productIdToRemove = "prod_001"; // Example ID, likely unnecessary now
+  // const allProducts = rawAllProducts.filter(p => p.id !== productIdToRemove);
+  const allProducts = rawAllProducts; // Use all fetched products
+
 
   // Simulate fetching the "latest" products by taking the last N items
   const numberOfLatestProducts = 6;
@@ -27,7 +29,8 @@ export default async function Home() {
           src="https://picsum.photos/seed/pasal_banner/1200/400" // Placeholder banner image
           alt="Bhattarai Kirana Pasal Banner"
           fill
-          sizes="(max-width: 768px) 100vw, 1200px"
+          // Correct sizes prop for the banner image
+          sizes="100vw"
           className="object-cover"
           priority // Prioritize loading for the banner
         />
