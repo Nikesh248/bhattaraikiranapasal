@@ -1,11 +1,10 @@
 
 import { Suspense } from 'react';
 import Image from 'next/image';
-import ProductCard from '@/components/product/product-card';
 import { getFeaturedProducts, getAllProducts } from '@/lib/data'; // Use async functions
-import type { Product } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import Recommendations from '@/components/recommendations'; // Import the client component
+import ProductList from '@/components/product-list'; // Import the new client component
 
 // --- Server Component ---
 export default async function Home() {
@@ -40,32 +39,16 @@ export default async function Home() {
         <Recommendations />
       </Suspense>
 
-      {/* Featured Products Section (Server Rendered) */}
+      {/* Featured Products Section (Using Client Component) */}
       <section>
         <h2 className="text-3xl font-bold mb-6 text-primary">Featured Products</h2>
-        {featuredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground">No featured products available.</p>
-        )}
+        <ProductList initialProducts={featuredProducts} />
       </section>
 
-      {/* All Products Section (Server Rendered) */}
+      {/* All Products Section (Using Client Component) */}
       <section>
         <h2 className="text-3xl font-bold mb-6 text-primary">All Products</h2>
-        {allProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {allProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted-foreground">No products available.</p>
-        )}
+        <ProductList initialProducts={allProducts} />
       </section>
     </div>
   );
@@ -87,3 +70,14 @@ function RecommendationsSkeleton() {
     </section>
   );
 }
+
+// Skeleton for ProductList (optional, if loading takes time)
+// function ProductListSkeleton() {
+//   return (
+//     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+//       {[...Array(4)].map((_, index) => (
+//         <Skeleton key={index} className="h-[350px] w-full rounded-lg" />
+//       ))}
+//     </div>
+//   );
+// }

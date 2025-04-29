@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Product } from '@/types';
@@ -5,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingCart, Trash2 } from 'lucide-react'; // Import Trash2 icon
+import { ShoppingCart, Trash2, Loader2 } from 'lucide-react'; // Import Loader2
 import { useCartStore } from '@/hooks/use-cart';
 import { useAuthStore } from '@/hooks/use-auth'; // Import useAuthStore
 import { useToast } from "@/hooks/use-toast";
@@ -20,15 +21,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog" // Import AlertDialog
+import { removeProductAction } from '@/actions/remove-product'; // Import the server action
+import { useState } from 'react'; // Import useState
 
 interface ProductCardProps {
   product: Product;
+  onRemove?: (productId: string) => void; // Add optional callback prop
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, onRemove }: ProductCardProps) {
   const addToCart = useCartStore((state) => state.addToCart);
   const { user, isAuthenticated } = useAuthStore(); // Get user and auth state
   const { toast } = useToast();
+  const [isRemoving, setIsRemoving] = useState(false); // State for loading indicator
 
   // Simple mock admin check - replace with real logic if needed
   const isAdmin = isAuthenticated && user?.email === 'admin@pasal.com';
@@ -41,30 +46,41 @@ export default function ProductCard({ product }: ProductCardProps) {
     });
   };
 
-  const handleRemoveProduct = async () => {
-    // In a real application, you would call a Server Action here
-    // to remove the product from the database and revalidate the path.
-    console.log(`Simulating removal of product: ${product.name} (ID: ${product.id}) by admin: ${user?.email}`);
+  const handleConfirmRemove = async () => {
+    if (!isAdmin) return; // Should not happen if button isn't rendered, but good practice
 
-    // TODO: Implement Server Action for actual removal
-    // Example (pseudo-code):
-    // const result = await removeProductAction(product.id);
-    // if (result.success) {
-    //   toast({ title: "Product Removed", description: `${product.name} has been removed.` });
-    //   // Revalidation would happen in the server action, triggering UI update
-    // } else {
-    //   toast({ variant: "destructive", title: "Removal Failed", description: result.error });
-    // }
+    setIsRemoving(true); // Show loading state
 
-    // Simulate success for now
-    toast({
-      title: "Product Removed (Simulated)",
-      description: `${product.name} has been removed. Refresh to see changes.`,
-      variant: "destructive"
-    });
-    // Note: This simulation doesn't update the UI automatically without page refresh
-    // because we are not actually removing data and revalidating.
-  };
+    try {
+        // Call the server action to remove the product from the backend
+        const result = await removeProductAction(product.id);
+
+        if (result.success) {
+            toast({
+                title: "Product Removed",
+                description: `${product.name} has been removed successfully.`,
+            });
+            // Call the onRemove callback to update the parent component's state
+            onRemove?.(product.id);
+            // No need to setIsRemoving(false) here as the component will unmount
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Removal Failed",
+                description: result.error || "Could not remove the product.",
+            });
+            setIsRemoving(false); // Hide loading state on failure
+        }
+    } catch (error) {
+        console.error("Error calling removeProductAction:", error);
+        toast({
+            variant: "destructive",
+            title: "Removal Error",
+            description: "An unexpected error occurred while trying to remove the product.",
+        });
+        setIsRemoving(false); // Hide loading state on unexpected error
+    }
+};
 
 
   return (
@@ -107,8 +123,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                  size="icon"
                  className="flex-shrink-0"
                  aria-label={`Remove ${product.name}`}
+                 disabled={isRemoving} // Disable trigger while removing
                >
-                 <Trash2 className="h-4 w-4" />
+                  {isRemoving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                </Button>
              </AlertDialogTrigger>
              <AlertDialogContent>
@@ -116,14 +133,25 @@ export default function ProductCard({ product }: ProductCardProps) {
                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                  <AlertDialogDescription>
                    This action cannot be undone. This will permanently remove the product
-                   "{product.name}" from the store (simulation only).
+                   "{product.name}" from the store.
                  </AlertDialogDescription>
                </AlertDialogHeader>
                <AlertDialogFooter>
-                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                 {/* Call handleRemoveProduct on confirmation */}
-                 <AlertDialogAction onClick={handleRemoveProduct} className="bg-destructive hover:bg-destructive/90">
-                    Remove Product
+                 <AlertDialogCancel disabled={isRemoving}>Cancel</AlertDialogCancel>
+                 {/* Call handleConfirmRemove on confirmation */}
+                 <AlertDialogAction
+                    onClick={handleConfirmRemove}
+                    className="bg-destructive hover:bg-destructive/90"
+                    disabled={isRemoving}
+                  >
+                    {isRemoving ? (
+                        <>
+                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                         Removing...
+                        </>
+                    ) : (
+                         'Remove Product'
+                    )}
                  </AlertDialogAction>
                </AlertDialogFooter>
              </AlertDialogContent>

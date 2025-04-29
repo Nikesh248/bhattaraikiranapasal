@@ -5,7 +5,9 @@ import type { Product } from '@/types';
 // We are using placeholder images from picsum.photos.
 // To use specific images, they need to be hosted online or placed in the public directory of the Next.js app.
 
-export const mockProducts: Product[] = [
+// IMPORTANT: In a real app, this would interact with a database.
+// Using a mutable let variable here to simulate data changes for demo purposes.
+let mockProducts: Product[] = [
   {
     id: 'prod_001',
     name: 'Organic Apples',
@@ -135,7 +137,8 @@ export const getCategories = (): string[] => {
 export const getAllProducts = async (): Promise<Product[]> => {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 120)); // 120ms delay
-  return mockProducts;
+  // Return a copy to prevent direct mutation issues if the caller modifies it
+  return [...mockProducts];
 };
 
 // Function to get featured products (can be async)
@@ -143,5 +146,17 @@ export const getFeaturedProducts = async (limit: number = 6): Promise<Product[]>
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 70)); // 70ms delay
     // Simple logic: return first 'limit' products, add more sophisticated logic later
-    return mockProducts.slice(0, limit);
+     // Return a copy
+    return [...mockProducts].slice(0, limit);
+};
+
+// Function to simulate removing a product by ID (returns true if successful)
+export const removeProductById = async (productId: string): Promise<boolean> => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 60)); // 60ms delay
+  const initialLength = mockProducts.length;
+  // Filter out the product with the given ID
+  mockProducts = mockProducts.filter(p => p.id !== productId);
+  // Return true if the length changed (meaning the product was found and removed)
+  return mockProducts.length < initialLength;
 };
