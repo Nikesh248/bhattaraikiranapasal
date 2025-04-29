@@ -101,22 +101,23 @@ let mockProducts: Product[] = [
 ];
 
 // Simulate async data fetching (e.g., from an API or database)
+// Reduced delays for faster development feedback
 export const getProductById = async (id: string): Promise<Product | undefined> => {
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay
+  await new Promise(resolve => setTimeout(resolve, 10)); // Reduced delay
   return mockProducts.find(p => p.id === id);
 };
 
 export const getProductsByCategory = async (category: string): Promise<Product[]> => {
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay
+  await new Promise(resolve => setTimeout(resolve, 20)); // Reduced delay
   const lowerCaseCategory = category.toLowerCase();
   return mockProducts.filter(p => p.category.toLowerCase() === lowerCaseCategory);
 };
 
 export const searchProducts = async (query: string): Promise<Product[]> => {
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 80)); // 80ms delay
+  await new Promise(resolve => setTimeout(resolve, 15)); // Reduced delay
   if (!query) return mockProducts; // Return all if query is empty
   const lowerCaseQuery = query.toLowerCase();
   return mockProducts.filter(
@@ -133,7 +134,7 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
  */
 export const getCategories = async (): Promise<string[]> => {
     // Simulate network delay for fetching categories
-    await new Promise(resolve => setTimeout(resolve, 40)); // 40ms delay
+    await new Promise(resolve => setTimeout(resolve, 10)); // Reduced delay
     const categories = new Set(mockProducts.map(p => p.category));
     return Array.from(categories);
 };
@@ -141,7 +142,7 @@ export const getCategories = async (): Promise<string[]> => {
 // Function to get all products (can be async)
 export const getAllProducts = async (): Promise<Product[]> => {
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 120)); // 120ms delay
+  await new Promise(resolve => setTimeout(resolve, 25)); // Reduced delay
   // Return a copy to prevent direct mutation issues if the caller modifies it
   return [...mockProducts];
 };
@@ -149,7 +150,7 @@ export const getAllProducts = async (): Promise<Product[]> => {
 // Function to get featured products (can be async)
 export const getFeaturedProducts = async (limit: number = 6): Promise<Product[]> => {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 70)); // 70ms delay
+    await new Promise(resolve => setTimeout(resolve, 15)); // Reduced delay
     // Simple logic: return first 'limit' products, add more sophisticated logic later
      // Return a copy
     return [...mockProducts].slice(0, limit);
@@ -158,7 +159,7 @@ export const getFeaturedProducts = async (limit: number = 6): Promise<Product[]>
 // Function to simulate removing a product by ID (returns true if successful)
 export const removeProductById = async (productId: string): Promise<boolean> => {
   // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 60)); // 60ms delay
+  await new Promise(resolve => setTimeout(resolve, 10)); // Reduced delay
   const initialLength = mockProducts.length;
   // Filter out the product with the given ID
   mockProducts = mockProducts.filter(p => p.id !== productId);

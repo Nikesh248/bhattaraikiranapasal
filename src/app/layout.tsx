@@ -33,29 +33,16 @@ const geistMono = Geist_Mono({
 //   description: 'Shop groceries, essentials, and more!',
 // };
 
-// Removed auto-refresh interval
-// const REFRESH_INTERVAL_MS = 2 * 60 * 1000;
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
 
-  // Removed the useEffect that caused the page to reload every 2 minutes
-  // useEffect(() => {
-  //   const intervalId = setInterval(() => {
-  //     console.log(`Auto-refreshing page now (interval: ${REFRESH_INTERVAL_MS / 1000}s)...`);
-  //     window.location.reload();
-  //   }, REFRESH_INTERVAL_MS);
-  //   return () => {
-  //     console.log('Clearing auto-refresh interval.');
-  //     clearInterval(intervalId);
-  //   };
-  // }, []);
-
   return (
-    <html lang="en">
+    // Add suppressHydrationWarning to potentially reduce console noise from minor hydration issues.
+    // However, it's best to fix the root cause of hydration errors if possible.
+    <html lang="en" suppressHydrationWarning={true}>
       <head>
         {/* Manually set title and meta description for client component layout */}
         <title>Bhattarai Kirana Pasal - Your Local Shop</title>
