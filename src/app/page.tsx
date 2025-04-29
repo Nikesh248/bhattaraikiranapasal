@@ -24,7 +24,7 @@ export default async function Home() {
   return (
     <div className="space-y-12">
       {/* Banner Image */}
-      <section className="relative w-full h-64 md:h-80 rounded-lg overflow-hidden shadow-lg">
+      <section className="relative w-full h-48 md:h-64 rounded-lg overflow-hidden shadow-lg"> {/* Reduced height */}
         <Image
           src="https://picsum.photos/seed/pasal_banner/1200/400" // Placeholder banner image
           alt="Bhattarai Kirana Pasal Banner"
@@ -35,7 +35,7 @@ export default async function Home() {
           priority // Prioritize loading for the banner
         />
         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-           <h1 className="text-4xl md:text-6xl font-bold text-white text-center drop-shadow-md px-4">
+           <h1 className="text-3xl md:text-4xl font-bold text-white text-center drop-shadow-md px-4"> {/* Adjusted text size */}
               Welcome to Bhattarai Kirana Pasal
             </h1>
         </div>
