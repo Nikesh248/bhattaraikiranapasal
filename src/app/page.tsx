@@ -9,13 +9,7 @@ import ProductList from '@/components/product-list'; // Import the new client co
 // --- Server Component ---
 export default async function Home() {
   // Fetch all products directly on the server
-  const rawAllProducts = await getAllProducts();
-
-  // Filter out the specific product (if still needed, though it might be better removed from data.ts)
-  // const productIdToRemove = "prod_001"; // Example ID, likely unnecessary now
-  // const allProducts = rawAllProducts.filter(p => p.id !== productIdToRemove);
-  const allProducts = rawAllProducts; // Use all fetched products
-
+  const allProducts = await getAllProducts();
 
   // Simulate fetching the "latest" products by taking the last N items
   const numberOfLatestProducts = 6;
@@ -32,7 +26,7 @@ export default async function Home() {
           // Correct sizes prop for the banner image
           sizes="100vw"
           className="object-cover"
-          priority // Prioritize loading for the banner
+          priority // Prioritize loading for the banner (critical, above-the-fold)
         />
         <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
            <h1 className="text-3xl md:text-4xl font-bold text-white text-center drop-shadow-md px-4"> {/* Adjusted text size */}
@@ -53,8 +47,6 @@ export default async function Home() {
         <ProductList initialProducts={latestProducts} />
       </section>
 
-      {/* Removed Featured Products Section */}
-      {/* Removed All Products Section */}
     </div>
   );
 }
@@ -64,14 +56,25 @@ function RecommendationsSkeleton() {
   return (
     <section>
        <div className="bg-secondary border-primary/50 p-4 rounded-lg">
-         <Skeleton className="h-6 w-1/3 mb-4 rounded" />
-         <Skeleton className="h-4 w-2/3 mb-4 rounded" />
+         <Skeleton className="h-6 w-1/3 mb-4 rounded bg-muted" />
+         <Skeleton className="h-4 w-2/3 mb-4 rounded bg-muted" />
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <Skeleton className="h-[350px] w-full rounded-lg" />
-            <Skeleton className="h-[350px] w-full rounded-lg" />
-            <Skeleton className="h-[350px] w-full rounded-lg" />
+            <Skeleton className="h-[350px] w-full rounded-lg bg-muted" />
+            <Skeleton className="h-[350px] w-full rounded-lg bg-muted" />
+            <Skeleton className="h-[350px] w-full rounded-lg bg-muted" />
          </div>
        </div>
     </section>
   );
 }
+
+// Skeleton for Product List section (if needed separately)
+// function ProductListSkeleton() {
+//   return (
+//     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+//       {[...Array(4)].map((_, i) => (
+//         <Skeleton key={i} className="h-[350px] w-full rounded-lg bg-muted" />
+//       ))}
+//     </div>
+//   );
+// }

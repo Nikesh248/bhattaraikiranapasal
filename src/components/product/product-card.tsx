@@ -95,6 +95,7 @@ export default function ProductCard({ product, onRemove }: ProductCardProps) {
               // Add sizes prop for responsive image loading optimization
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover"
+              loading="lazy" // Ensure images in product cards load lazily
             />
           </div>
         </CardHeader>
@@ -162,3 +163,4 @@ export default function ProductCard({ product, onRemove }: ProductCardProps) {
     </Card>
   );
 }
+

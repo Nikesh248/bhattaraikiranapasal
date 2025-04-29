@@ -59,7 +59,8 @@ async function ProductDetailsContent({ productId }: { productId: string }) {
               fill
               sizes="(max-width: 768px) 100vw, 50vw"
               className="object-contain" // Use contain to prevent cropping if aspect ratio differs
-              priority // Prioritize loading this critical image
+              // Removed priority={true} - typically only one priority image per page (e.g., banner on home)
+              loading="lazy" // Explicitly set lazy loading
             />
           </div>
         </CardHeader>
@@ -106,21 +107,22 @@ function ProductSkeleton() {
      <Card className="overflow-hidden shadow-lg">
       <div className="grid md:grid-cols-2 gap-8 p-6">
         <CardHeader className="p-0">
-          <Skeleton className="aspect-square w-full rounded-lg" />
+          <Skeleton className="aspect-square w-full rounded-lg bg-muted" />
         </CardHeader>
         <CardContent className="p-0 flex flex-col justify-center space-y-4">
-           <Skeleton className="h-8 w-3/4 rounded" />
-           <Skeleton className="h-16 w-full rounded" />
-           <Skeleton className="h-8 w-1/4 rounded" />
-           <Skeleton className="h-4 w-1/5 rounded" />
+           <Skeleton className="h-8 w-3/4 rounded bg-muted" />
+           <Skeleton className="h-16 w-full rounded bg-muted" />
+           <Skeleton className="h-8 w-1/4 rounded bg-muted" />
+           <Skeleton className="h-4 w-1/5 rounded bg-muted" />
           <Separator className="my-4" />
            <div className="flex items-center gap-4">
-             <Skeleton className="h-8 w-20 rounded" />
-             <Skeleton className="h-8 w-24 rounded" />
+             <Skeleton className="h-8 w-20 rounded bg-muted" />
+             <Skeleton className="h-8 w-24 rounded bg-muted" />
            </div>
-          <Skeleton className="h-12 w-full md:w-48 rounded-lg" />
+          <Skeleton className="h-12 w-full md:w-48 rounded-lg bg-muted" />
          </CardContent>
        </div>
      </Card>
   );
 }
+

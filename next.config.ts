@@ -34,6 +34,7 @@ const nextConfig: NextConfig = {
        config.externals = [...config.externals, 'async_hooks', 'fs'];
     }
 
+    // Ensure code is minified in production server builds for smaller bundle sizes
     if (!dev && isServer) {
       config.optimization = {
         ...config.optimization,
@@ -49,7 +50,7 @@ const nextConfig: NextConfig = {
     swcMinify: true,
     // Enable optimizing CSS for smaller bundles
     optimizeCss: true,
-    // Enable instrumentation hook for webpack build
+    // Enable instrumentation hook for webpack build (useful for advanced monitoring/optimizations)
     webpackBuildInstrumentation: true,
   },
 };

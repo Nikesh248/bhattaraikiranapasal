@@ -33,8 +33,8 @@ const geistMono = Geist_Mono({
 //   description: 'Shop groceries, essentials, and more!',
 // };
 
-// Refresh interval: 2 minutes in milliseconds
-const REFRESH_INTERVAL_MS = 2 * 60 * 1000;
+// Removed auto-refresh interval
+// const REFRESH_INTERVAL_MS = 2 * 60 * 1000;
 
 export default function RootLayout({
   children,
@@ -42,20 +42,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
-  useEffect(() => {
-    // Set up the interval timer to reload the page
-    const intervalId = setInterval(() => {
-      console.log(`Auto-refreshing page now (interval: ${REFRESH_INTERVAL_MS / 1000}s)...`);
-      window.location.reload();
-    }, REFRESH_INTERVAL_MS);
-
-    // Cleanup function to clear the interval when the component unmounts
-    // This is important to prevent memory leaks, though less critical for the root layout
-    return () => {
-      console.log('Clearing auto-refresh interval.');
-      clearInterval(intervalId);
-    };
-  }, []); // Empty dependency array ensures this effect runs only once on mount
+  // Removed the useEffect that caused the page to reload every 2 minutes
+  // useEffect(() => {
+  //   const intervalId = setInterval(() => {
+  //     console.log(`Auto-refreshing page now (interval: ${REFRESH_INTERVAL_MS / 1000}s)...`);
+  //     window.location.reload();
+  //   }, REFRESH_INTERVAL_MS);
+  //   return () => {
+  //     console.log('Clearing auto-refresh interval.');
+  //     clearInterval(intervalId);
+  //   };
+  // }, []);
 
   return (
     <html lang="en">
@@ -65,15 +62,15 @@ export default function RootLayout({
         <meta name="description" content="Shop groceries, essentials, and more!" />
         {/* Add other necessary head elements like favicons here if needed */}
          {/* Preload fonts */}
-         <link rel="preload" href={geistSans.path} as="font" crossOrigin="anonymous" />
-         <link rel="preload" href={geistMono.path} as="font" crossOrigin="anonymous" />
+         <link rel="preload" href={geistSans.path} as="font" type="font/woff2" crossOrigin="anonymous" />
+         <link rel="preload" href={geistMono.path} as="font" type="font/woff2" crossOrigin="anonymous" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
-        <Suspense fallback={<Skeleton className="h-20 w-full" />}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-background text-foreground`}>
+        <Suspense fallback={<Skeleton className="h-20 w-full bg-muted" />}>
           <Header />
         </Suspense>
         <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
-        <Suspense fallback={<Skeleton className="h-16 w-full" />}>
+        <Suspense fallback={<Skeleton className="h-16 w-full bg-muted" />}>
           <Footer />
         </Suspense>
         <Toaster />
