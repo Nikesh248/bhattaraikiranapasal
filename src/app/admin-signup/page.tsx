@@ -27,11 +27,11 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useAuthStore } from '@/hooks/use-auth'; // Consider a separate admin auth hook/store
+import { useAuthStore } from '@/hooks/use-auth'; // Uses user store for simplicity
 import { useToast } from '@/hooks/use-toast';
 
-// Hardcoded secret key as requested
-const ADMIN_SECRET_KEY = "seller@seller"; // Use env variable or fallback to "seller@seller"
+// Use environment variable or fallback to hardcoded secret key
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || "seller@seller";
 
 // Add adminSecretKey field to the schema
 const adminSignupSchema = z.object({
@@ -49,8 +49,8 @@ type AdminSignupFormValues = z.infer<typeof adminSignupSchema>;
 
 export default function AdminSignupPage() {
   const router = useRouter();
-  // Replace with admin-specific signup logic if needed
-  const { signup } = useAuthStore(); // Using user signup for now
+  // Using user signup for mock purposes. This does NOT create persistent admin credentials.
+  const { signup } = useAuthStore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,23 +73,32 @@ export default function AdminSignupPage() {
         throw new Error('Invalid Admin Secret Key.');
       }
 
-      // Simulate API call for admin signup
-      console.log('Admin Signup Data (Validated):', { ...data, adminSecretKey: '***REDACTED***' }); // Log data for debugging, hide key
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // --- MOCK ADMIN SIGNUP ---
+      // This simulates admin signup but DOES NOT create actual login credentials
+      // that can be used on the admin login page (unless they match the hardcoded ones).
+      // The login page uses fixed credentials: admin@pasal.com / admin123
+      console.log('Simulating Admin Signup (Data not persistently stored for login):', {
+         fullName: data.fullName,
+         email: data.email,
+         adminSecretKey: '***REDACTED***'
+      });
+      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network delay
 
-      // Mock: Assume signup is successful if fields are filled and key is valid
-      signup({ // This should ideally be an admin-specific signup/login function
-        id: 'admin_' + Date.now(), // Mock admin ID
+      // Mock: Call the user signup function (doesn't store password for login)
+      signup({
+        id: 'admin_mock_' + Date.now(),
         name: data.fullName,
         email: data.email,
-        // Add admin roles/flags here
+        // In a real app, add admin roles/flags here
       });
+
       toast({
-        title: 'Admin Signup Successful',
-        description: 'Your admin account has been created.',
+        title: 'Admin Signup Simulated',
+        description: 'Mock admin account process complete. Please use the hardcoded credentials to log in.',
       });
-      // Redirect to admin dashboard or login page
-      router.push('/admin-login'); // Redirect to admin login after signup
+
+      // Redirect to admin login page after simulated signup
+      router.push('/admin-login');
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -105,8 +114,9 @@ export default function AdminSignupPage() {
     <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">Create Admin Account</CardTitle>
-          <CardDescription>Enter details and the secret key to create an admin account</CardDescription>
+          <CardTitle className="text-2xl font-bold">Create Admin Account (Mock)</CardTitle>
+          <CardDescription>Enter details and the secret key to simulate admin signup.</CardDescription>
+           <p className="text-xs text-muted-foreground pt-1">(Secret Key: seller@seller)</p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -179,7 +189,7 @@ export default function AdminSignupPage() {
                 )}
               />
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={isLoading}>
-                {isLoading ? 'Creating Account...' : 'Create Admin Account'}
+                {isLoading ? 'Simulating...' : 'Simulate Admin Signup'}
               </Button>
             </form>
           </Form>
