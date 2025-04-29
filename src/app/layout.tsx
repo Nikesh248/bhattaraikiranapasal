@@ -1,22 +1,29 @@
 'use client'; // Add this directive
 
-import { useEffect } from 'react'; // Import useEffect
+import { useEffect, useState, lazy, Suspense } from 'react'; // Import useEffect, useState, lazy and Suspense
 // Removed Metadata import as it's not used directly in client component root layout
 // import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/layout/header';
-import Footer from '@/components/layout/footer';
+// import Header from '@/components/layout/header';
+// import Footer from '@/components/layout/footer';
 import { Toaster } from "@/components/ui/toaster";
+import { Skeleton } from "@/components/ui/skeleton";
+
+// Lazy load Header and Footer components
+const Header = lazy(() => import('@/components/layout/header'));
+const Footer = lazy(() => import('@/components/layout/footer'));
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
+  display: 'swap', // Add display swap for better font rendering
 });
 
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+  display: 'swap', // Add display swap for better font rendering
 });
 
 // Metadata is typically defined in Server Components or generateMetadata.
@@ -57,11 +64,18 @@ export default function RootLayout({
         <title>Bhattarai Kirana Pasal - Your Local Shop</title>
         <meta name="description" content="Shop groceries, essentials, and more!" />
         {/* Add other necessary head elements like favicons here if needed */}
+         {/* Preload fonts */}
+         <link rel="preload" href={geistSans.path} as="font" crossOrigin="anonymous" />
+         <link rel="preload" href={geistMono.path} as="font" crossOrigin="anonymous" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
-        <Header />
+        <Suspense fallback={<Skeleton className="h-20 w-full" />}>
+          <Header />
+        </Suspense>
         <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
-        <Footer />
+        <Suspense fallback={<Skeleton className="h-16 w-full" />}>
+          <Footer />
+        </Suspense>
         <Toaster />
       </body>
     </html>

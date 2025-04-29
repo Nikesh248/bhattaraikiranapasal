@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ProductCard from '@/components/product/product-card';
 // Remove the incorrect import: import { mockProducts } from '@/lib/data';
 import { getAllProducts } from '@/lib/data'; // Import the function to fetch all products
@@ -13,7 +12,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Lightbulb, AlertCircle } from "lucide-react";
 
-
 export default function Recommendations() {
   const [recommendations, setRecommendations] = useState<Product[]>([]);
   const [isLoadingRecommendations, setIsLoadingRecommendations] = useState(true); // Start as true
@@ -22,11 +20,24 @@ export default function Recommendations() {
   const cartItems = useCartStore((state) => state.items);
   const [aiAvailable, setAiAvailable] = useState<boolean | null>(null); // Track AI availability client-side, null initially
 
+  // Memoize the cart and search history for efficient comparison
+  const cartItemsMemo = useMemo(() => cartItems.map(item => item.name), [cartItems]);
+  const searchHistoryMemo = useMemo(() => [...searchHistory], [searchHistory]);
+
   useEffect(() => {
     const fetchRecommendationsAndProducts = async () => {
       setIsLoadingRecommendations(true);
       setRecommendationError(null);
       setAiAvailable(null); // Reset AI availability status on each fetch
+
+      // Prevent fetching if AI not configured or history/cart empty
+      if (searchHistoryMemo.length === 0 && cartItemsMemo.length === 0) {
+        setIsLoadingRecommendations(false);
+        setRecommendations([]); // No basis for recommendations
+        setAiAvailable(true); // Assume AI is available but no data to process
+        console.log("Skipping recommendations: No search history or cart items.");
+        return;
+      }
 
       // Fetch all products first to map recommendations
       let allProducts: Product[] = [];
@@ -46,21 +57,11 @@ export default function Recommendations() {
         return allProducts.find(p => p.name.toLowerCase() === lowerCaseName);
       };
 
-
-      // Prevent fetching if AI not configured or history/cart empty
-      if (searchHistory.length === 0 && cartItems.length === 0) {
-        setIsLoadingRecommendations(false);
-        setRecommendations([]); // No basis for recommendations
-        setAiAvailable(true); // Assume AI is available but no data to process
-        console.log("Skipping recommendations: No search history or cart items.");
-        return;
-      }
-
       try {
-        // Call the server action
+        // Call the server action with aggressive caching
         const result = await getRecommendationsAction({
-          searchHistory: searchHistory,
-          currentCart: cartItems.map(item => item.name), // Send current cart item names
+          searchHistory: searchHistoryMemo,
+          currentCart: cartItemsMemo, // Send current cart item names
           numberOfRecommendations: 3,
         });
 
@@ -103,7 +104,7 @@ export default function Recommendations() {
     };
 
     fetchRecommendationsAndProducts();
-  }, [searchHistory, cartItems]); // Re-fetch when search history or cart changes
+  }, [searchHistoryMemo, cartItemsMemo]); // Re-fetch when search history or cart changes
 
 
   // Render loading state only if AI availability hasn't been determined yet or is expected to be available

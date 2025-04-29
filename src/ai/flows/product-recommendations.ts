@@ -11,6 +11,7 @@
 import { ai, ensureAiIsConfigured, isAiConfigured } from '@/ai/ai-instance';
 import { z } from 'genkit';
 import { logger } from 'genkit/logging'; // Import Genkit logger
+import { cache } from 'react';
 
 const RecommendProductsInputSchema = z.object({
   searchHistory: z.array(z.string()).describe('The user\'s search history.'),
@@ -25,7 +26,8 @@ const RecommendProductsOutputSchema = z.object({
 export type RecommendProductsOutput = z.infer<typeof RecommendProductsOutputSchema>;
 
 // This internal function is called by the Server Action
-async function recommendProductsFlowInternal(input: RecommendProductsInput): Promise<RecommendProductsOutput> {
+const recommendProductsFlowInternal = cache(
+    async (input: RecommendProductsInput): Promise<RecommendProductsOutput> => {
     logger.info("recommendProductsFlowInternal started with input:", input); // Log input
     try {
         // Double-check AI config within the flow execution
@@ -69,6 +71,7 @@ async function recommendProductsFlowInternal(input: RecommendProductsInput): Pro
         throw new Error("Failed to get recommendations due to an unknown internal error.");
     }
 }
+);
 
 
 // Exported function to be used by Server Actions. It wraps the flow definition.
@@ -139,5 +142,3 @@ const recommendProductsFlow = ai.defineFlow<
   },
   recommendProductsFlowInternal // Use the internal async function
 );
-
-
