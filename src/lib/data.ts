@@ -127,8 +127,13 @@ export const searchProducts = async (query: string): Promise<Product[]> => {
   );
 };
 
-// This can remain synchronous if categories are derived from static data
-export const getCategories = (): string[] => {
+/**
+ * Fetches the unique product categories.
+ * @returns A promise that resolves to an array of category names.
+ */
+export const getCategories = async (): Promise<string[]> => {
+    // Simulate network delay for fetching categories
+    await new Promise(resolve => setTimeout(resolve, 40)); // 40ms delay
     const categories = new Set(mockProducts.map(p => p.category));
     return Array.from(categories);
 };

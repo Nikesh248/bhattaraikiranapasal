@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ShoppingCart, Search, User, Menu, LogIn, LogOut, History, PackagePlus } from 'lucide-react'; // Added PackagePlus icon
+import { ShoppingCart, Search, User, Menu, LogIn, LogOut, History, PackagePlus, ChevronDown } from 'lucide-react'; // Added ChevronDown
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -19,10 +19,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub, // Import Sub components
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from "@/components/ui/skeleton";
-
+import { getCategories } from '@/lib/data'; // Import function to get categories
 
 export default function Header() {
   const router = useRouter();
@@ -31,6 +35,7 @@ export default function Header() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
 
   // Get cart state after client-side mount
   const totalItems = useCartStore((state) => (isClient ? state.getTotalItems() : 0));
@@ -39,6 +44,13 @@ export default function Header() {
 
   useEffect(() => {
     setIsClient(true);
+    // Fetch categories on client mount
+    const fetchCategories = async () => {
+      // getCategories might need to become async if data fetching changes
+      const fetchedCategories = await getCategories(); // Assuming getCategories can be async now
+      setCategories(fetchedCategories);
+    };
+    fetchCategories();
   }, []);
 
   // Simple mock admin check - replace with real logic if needed
@@ -103,6 +115,25 @@ export default function Header() {
                    {item.label}
                  </Link>
                ))}
+               {/* Categories Dropdown */}
+                {isClient && categories.length > 0 && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="text-sm font-medium text-foreground hover:text-primary transition-colors px-3 py-2">
+                        Categories <ChevronDown className="ml-1 h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start">
+                      {categories.map((category) => (
+                        <DropdownMenuItem key={category} asChild>
+                          <Link href={`/category/${encodeURIComponent(category)}`}>
+                            {category}
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
                 {/* Conditionally render Order History for authenticated users */}
                 {isClient && isAuthenticated && (
                    <Link href="/profile/orders" className="text-sm font-medium text-foreground hover:text-primary transition-colors flex items-center gap-1">
@@ -142,7 +173,7 @@ export default function Header() {
                  <ShoppingCart className="h-5 w-5" />
                  {/* Only render the badge on the client when items exist */}
                  {isClient && totalItems > 0 && (
-                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full p-0 text-xs bg-destructive text-destructive-foreground">
+                   <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 min-w-[1rem] flex items-center justify-center rounded-full p-0.5 text-xs font-medium">
                      {totalItems}
                    </Badge>
                  )}
@@ -154,7 +185,7 @@ export default function Header() {
              </Link>
 
              {/* Auth Dropdown / Login Button (Desktop) */}
-             <div className="hidden md:flex items-center justify-center min-w-[6rem]">
+              <div className="hidden md:flex items-center justify-center min-w-[6rem]">
                {/* Render skeleton initially */}
                {!isClient ? (
                  <Skeleton className="h-8 w-20 rounded-md" />
@@ -255,6 +286,35 @@ export default function Header() {
                          {item.label}
                        </Link>
                      ))}
+                     {/* Mobile Categories */}
+                      {isClient && categories.length > 0 && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="w-full justify-start px-2 py-2 text-lg font-medium text-foreground hover:text-primary transition-colors rounded-md hover:bg-primary/10">
+                                Categories <ChevronDown className="ml-auto h-5 w-5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            {/* Use Portal to ensure content renders correctly in Sheet */}
+                            <DropdownMenuPortal>
+                                <DropdownMenuContent
+                                    side="bottom" // Adjust side as needed within the sheet
+                                    align="start"
+                                    className="w-[calc(100%-2rem)] ml-4 bg-background border-border shadow-lg" // Style appropriately for mobile dropdown
+                                >
+                                    {categories.map((category) => (
+                                    <DropdownMenuItem key={category} asChild>
+                                        <Link
+                                            href={`/category/${encodeURIComponent(category)}`}
+                                            onClick={() => setIsMobileMenuOpen(false)} // Close sheet on selection
+                                        >
+                                        {category}
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    ))}
+                                </DropdownMenuContent>
+                            </DropdownMenuPortal>
+                          </DropdownMenu>
+                        )}
                       {/* Conditionally render Order History for authenticated users */}
                       {isClient && isAuthenticated && (
                          <Link
