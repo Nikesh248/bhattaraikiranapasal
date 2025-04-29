@@ -27,12 +27,20 @@ if (process.env.GOOGLE_GENAI_API_KEY) {
     modelIsAvailable = true;
     console.log("Google AI plugin loaded successfully.");
   } catch (error) {
-      console.error("********************************************************************");
-      console.error("ERROR: Failed to initialize Google AI plugin. Please check your API key and configuration.");
+      console.error("\n********************************************************************");
+      console.error("ERROR: Failed to initialize Google AI plugin.");
+      // Check if the error message indicates an invalid API key specifically
+      if (error instanceof Error && /API key not valid/i.test(error.message)) {
+         console.error("REASON: The provided GOOGLE_GENAI_API_KEY is invalid.");
+      } else {
+         console.error("REASON: Could not initialize the plugin. Please check your API key and configuration.");
+      }
       console.error("Error details:", error);
       console.error("AI features requiring the Google AI plugin will not function.");
       console.error("Get your API key from Google AI Studio: https://aistudio.google.com/app/apikey");
-      console.error("********************************************************************");
+      console.error("Ensure the key is correctly set in your .env.local file:");
+      console.error("GOOGLE_GENAI_API_KEY=YOUR_VALID_API_KEY_HERE");
+      console.error("********************************************************************\n");
       modelIsAvailable = false; // Ensure model is marked as unavailable
   }
 } else {
@@ -57,6 +65,6 @@ export const isAiConfigured = modelIsAvailable;
 // Optional: Add a check function to be used within flows
 export function ensureAiIsConfigured() {
     if (!isAiConfigured) {
-        throw new Error("AI features are not configured. Please check the GOOGLE_GENAI_API_KEY environment variable.");
+        throw new Error("AI features are not configured. Please check the GOOGLE_GENAI_API_KEY environment variable and server logs.");
     }
 }

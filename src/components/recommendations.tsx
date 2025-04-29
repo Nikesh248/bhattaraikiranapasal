@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -29,6 +30,7 @@ export default function Recommendations() {
     const fetchRecommendations = async () => {
       setIsLoadingRecommendations(true);
       setRecommendationError(null);
+      setAiAvailable(null); // Reset AI availability status on each fetch
 
       if (searchHistory.length === 0 && cartItems.length === 0) {
         setIsLoadingRecommendations(false);
@@ -47,9 +49,17 @@ export default function Recommendations() {
 
         // Check for errors returned by the server action
         if (!result.success || !result.output) {
+             // Distinguish between "not configured" and "invalid key"
+             if (result.error?.includes("AI service is not configured")) {
+                 setAiAvailable(false);
+             } else if (result.error?.includes("Invalid API Key")) {
+                 setAiAvailable(false); // Treat invalid key as not available for UI purposes
+             } else {
+                 setAiAvailable(true); // Assume available but another error occurred
+             }
              throw new Error(result.error || "Failed to get recommendations.");
         }
-        setAiAvailable(true); // AI is configured if we get a successful response
+        setAiAvailable(true); // AI is configured and worked if we get a successful response
 
         // Map AI recommendations (product names) to actual Product objects
         const recommendedProducts = result.output.recommendations
@@ -63,12 +73,7 @@ export default function Recommendations() {
         const errorMessage = error instanceof Error ? error.message : "Could not load recommendations at this time.";
         setRecommendationError(errorMessage);
         setRecommendations([]);
-        // Determine if AI is unavailable based on specific error messages
-        if (errorMessage.includes("AI service is not configured") || errorMessage.includes("Invalid API Key")) {
-            setAiAvailable(false);
-        } else {
-            setAiAvailable(true); // Assume available but another error occurred
-        }
+        // AI availability is already set within the try/catch based on specific errors
       } finally {
         setIsLoadingRecommendations(false);
       }
@@ -79,7 +84,7 @@ export default function Recommendations() {
 
 
   // Render loading state only if AI availability hasn't been determined yet or is expected to be available
-  if (isLoadingRecommendations && aiAvailable !== false) {
+  if (isLoadingRecommendations && aiAvailable === null) {
     return (
        <section>
            <Alert className="bg-secondary border-primary/50">
@@ -97,20 +102,52 @@ export default function Recommendations() {
     );
   }
 
-  // Render error state (includes AI not configured error if aiAvailable is false)
-  if (recommendationError || aiAvailable === false) {
-    return (
-      <section>
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Recommendation Error</AlertTitle>
-          <AlertDescription>
-             {recommendationError || "AI recommendations are currently unavailable. Please ensure the API key is configured."}
-           </AlertDescription>
-        </Alert>
-      </section>
-    );
-  }
+  // Render error state or AI not configured/invalid key message
+   if (aiAvailable === false) {
+     const isInvalidKeyError = recommendationError?.includes("Invalid API Key");
+     const isNotConfiguredError = recommendationError?.includes("AI service is not configured");
+
+     let errorTitle = "Recommendation Error";
+     let errorDescription = recommendationError || "AI recommendations are currently unavailable.";
+
+     if (isInvalidKeyError) {
+        errorTitle = "Invalid AI API Key";
+        errorDescription = "The provided Google AI API Key is invalid. Please check your .env.local file and ensure GOOGLE_GENAI_API_KEY is set correctly. Get your key from Google AI Studio.";
+     } else if (isNotConfiguredError) {
+         errorTitle = "AI Service Not Configured";
+         errorDescription = "The AI recommendation service is not configured. Please add your GOOGLE_GENAI_API_KEY to the .env.local file in the project root. Get your key from Google AI Studio.";
+     }
+
+     return (
+       <section>
+         <Alert variant="destructive">
+           <AlertCircle className="h-4 w-4" />
+           <AlertTitle>{errorTitle}</AlertTitle>
+           <AlertDescription>
+              {errorDescription}
+              <p className="mt-2 text-xs">You can obtain an API key from <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="underline">Google AI Studio</a>.</p>
+            </AlertDescription>
+         </Alert>
+       </section>
+     );
+   }
+
+
+   // Generic error if AI is available but something else went wrong
+   if (recommendationError && aiAvailable === true) {
+       return (
+         <section>
+           <Alert variant="destructive">
+             <AlertCircle className="h-4 w-4" />
+             <AlertTitle>Recommendation Error</AlertTitle>
+             <AlertDescription>
+                {recommendationError}
+              </AlertDescription>
+           </Alert>
+         </section>
+       );
+   }
+
 
   // Render recommendations if available and AI is configured
   if (aiAvailable === true && recommendations.length > 0) {
@@ -132,13 +169,13 @@ export default function Recommendations() {
     );
   }
 
-  // Return null or a placeholder if no recommendations and no error/loading, or if AI is not configured and loading is done
-   // Also return null if AI is available but there were no recommendations (e.g., insufficient history)
+  // Return null or a placeholder if no recommendations and no error/loading,
+  // or if AI is available but there were no recommendations (e.g., insufficient history)
   if (aiAvailable === true && recommendations.length === 0 && !isLoadingRecommendations) {
     // Optionally, show a message indicating no recommendations based on current data
     // console.log("No recommendations to display based on current activity.");
     return null;
   }
 
-  return null;
+  return null; // Default return null if none of the above conditions are met
 }
