@@ -10,10 +10,16 @@ import ProductList from '@/components/product-list'; // Import the new client co
 export default async function Home() {
   // Fetch data directly on the server
   // Using Promise.all for concurrent fetching
-  const [featuredProducts, allProducts] = await Promise.all([
+  const [rawFeaturedProducts, rawAllProducts] = await Promise.all([
     getFeaturedProducts(6),
     getAllProducts() // Fetch all products for the "All Products" section
   ]);
+
+  // Filter out the specific product
+  const productIdToRemove = "prod_001";
+  const featuredProducts = rawFeaturedProducts.filter(p => p.id !== productIdToRemove);
+  const allProducts = rawAllProducts.filter(p => p.id !== productIdToRemove);
+
 
   return (
     <div className="space-y-12">
@@ -58,7 +64,7 @@ export default async function Home() {
 function RecommendationsSkeleton() {
   return (
     <section>
-       <div className="bg-secondary border border-primary/50 p-4 rounded-lg">
+       <div className="bg-secondary border-primary/50 p-4 rounded-lg">
          <Skeleton className="h-6 w-1/3 mb-4 rounded" />
          <Skeleton className="h-4 w-2/3 mb-4 rounded" />
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -81,3 +87,4 @@ function RecommendationsSkeleton() {
 //     </div>
 //   );
 // }
+
