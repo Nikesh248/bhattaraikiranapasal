@@ -64,8 +64,11 @@ export default function AdminLoginPage() {
       // --- IMPORTANT ---
       // In a real application, you MUST verify admin credentials against a secure backend endpoint.
       // This mock logic is insecure and only for demonstration.
-      // Example check (highly insecure, replace with backend verification):
-      if (data.email === 'admin@pasal.com' && data.password === 'admin123') { // Updated credentials
+      // Correct hardcoded credentials:
+      const hardcodedAdminEmail = 'admin@pasal.com';
+      const hardcodedAdminPassword = 'admin123';
+
+      if (data.email === hardcodedAdminEmail && data.password === hardcodedAdminPassword) {
         // Use a dedicated admin login function if available
         login({
           id: 'admin_' + Date.now(), // Mock admin ID
@@ -75,12 +78,12 @@ export default function AdminLoginPage() {
         });
         toast({
           title: 'Admin Login Successful',
-          description: 'Welcome, Admin!',
+          description: 'Welcome, Admin! Redirecting to dashboard...',
         });
         // Redirect to an admin dashboard or a specific admin area
         router.push('/admin/dashboard'); // TODO: Create admin dashboard page
       } else {
-        throw new Error('Invalid admin credentials');
+        throw new Error('Invalid admin credentials. Please check email and password.');
       }
     } catch (error) {
       toast({
@@ -88,9 +91,10 @@ export default function AdminLoginPage() {
         title: 'Admin Login Failed',
         description: error instanceof Error ? error.message : 'An unexpected error occurred.',
       });
-    } finally {
-      setIsLoading(false);
+       // Ensure loading state is turned off on error
+       setIsLoading(false);
     }
+    // No need to set isLoading=false on success because we redirect
   };
 
   return (
